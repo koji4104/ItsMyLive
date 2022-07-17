@@ -44,15 +44,15 @@ class MyEdge {
   static double leftMargin = 200.0; // タブレット時の左マージン
 
   ProviderBase? _provider;
-  double _width = 0;
+  double width = 0;
 
   /// Edgeを取得
   /// 各スクリーンのbuild()内で呼び出す
   void getEdge(BuildContext context, WidgetRef ref) async {
-    if (_width == MediaQuery.of(context).size.width)
+    if (width == MediaQuery.of(context).size.width)
       return;
-    _width = MediaQuery.of(context).size.width;
-    print('-- getEdge() width=${_width.toInt()}');
+    width = MediaQuery.of(context).size.width;
+    print('-- getEdge() width=${width.toInt()}');
 
     if (!kIsWeb && Platform.isAndroid) {
       print('-- isAndroid');

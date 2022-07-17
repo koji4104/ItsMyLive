@@ -1,68 +1,74 @@
 PODS:
-  - apivideo_live_stream (0.0.1):
-    - ApiVideoHaishinKit (= 1.2.3.1)
+  - audio_session (0.0.1):
     - Flutter
-  - ApiVideoHaishinKit (1.2.3.1):
-    - Logboard (~> 2.2.2)
   - battery_plus (1.0.0):
     - Flutter
   - camera (0.0.1):
     - Flutter
   - Flutter (1.0.0)
+  - haishin_kit (0.9.0):
+    - Flutter
+    - HaishinKit (= 1.2.6)
+  - HaishinKit (1.2.6):
+    - Logboard (~> 2.2.2)
   - Logboard (2.2.2)
   - native_device_orientation (0.0.1):
     - Flutter
   - path_provider_ios (0.0.1):
     - Flutter
-  - shared_preferences_ios (0.0.1):
+  - permission_handler_apple (9.0.4):
     - Flutter
-  - wakelock (0.0.1):
+  - shared_preferences_ios (0.0.1):
     - Flutter
 
 DEPENDENCIES:
-  - apivideo_live_stream (from `.symlinks/plugins/apivideo_live_stream/ios`)
+  - audio_session (from `.symlinks/plugins/audio_session/ios`)
   - battery_plus (from `.symlinks/plugins/battery_plus/ios`)
   - camera (from `.symlinks/plugins/camera/ios`)
   - Flutter (from `Flutter`)
+  - haishin_kit (from `.symlinks/plugins/haishin_kit/ios`)
   - native_device_orientation (from `.symlinks/plugins/native_device_orientation/ios`)
   - path_provider_ios (from `.symlinks/plugins/path_provider_ios/ios`)
+  - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - shared_preferences_ios (from `.symlinks/plugins/shared_preferences_ios/ios`)
-  - wakelock (from `.symlinks/plugins/wakelock/ios`)
 
 SPEC REPOS:
   trunk:
-    - ApiVideoHaishinKit
+    - HaishinKit
     - Logboard
 
 EXTERNAL SOURCES:
-  apivideo_live_stream:
-    :path: ".symlinks/plugins/apivideo_live_stream/ios"
+  audio_session:
+    :path: ".symlinks/plugins/audio_session/ios"
   battery_plus:
     :path: ".symlinks/plugins/battery_plus/ios"
   camera:
     :path: ".symlinks/plugins/camera/ios"
   Flutter:
     :path: Flutter
+  haishin_kit:
+    :path: ".symlinks/plugins/haishin_kit/ios"
   native_device_orientation:
     :path: ".symlinks/plugins/native_device_orientation/ios"
   path_provider_ios:
     :path: ".symlinks/plugins/path_provider_ios/ios"
+  permission_handler_apple:
+    :path: ".symlinks/plugins/permission_handler_apple/ios"
   shared_preferences_ios:
     :path: ".symlinks/plugins/shared_preferences_ios/ios"
-  wakelock:
-    :path: ".symlinks/plugins/wakelock/ios"
 
 SPEC CHECKSUMS:
-  apivideo_live_stream: 574f281f1503bd06aa6c13750b14770349829f96
-  ApiVideoHaishinKit: 80dae6bff814dee29ef93761a2f8f9d35940de8a
+  audio_session: 4f3e461722055d21515cf3261b64c973c062f345
   battery_plus: 7851ab482c336dd101ae735dc9363f01e1223c7c
   camera: 9993f92f2c793e87b65e35f3a23c70582afb05b1
   Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
+  haishin_kit: 09460f402b7d7fd3bf89926e16107876e66e0d2d
+  HaishinKit: 70d836491b7041b470d5f30e9325e1045ff83dfc
   Logboard: 0ab6bbd984ed032b3f0b615cef06779a73445c80
   native_device_orientation: 3b4cfc9565a7b879cc4fde282b3e27745e852d0d
   path_provider_ios: 14f3d2fd28c4fdb42f44e0f751d12861c43cee02
+  permission_handler_apple: 44366e37eaf29454a1e7b1b7d736c2cceaeb17ce
   shared_preferences_ios: 548a61f8053b9b8a49ac19c1ffbc8b92c50d68ad
-  wakelock: d0fc7c864128eac40eba1617cb5264d9c940b46f
 
 PODFILE CHECKSUM: aafe91acc616949ddb318b77800a7f51bffa2a4c
 

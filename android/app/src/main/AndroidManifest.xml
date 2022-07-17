@@ -5,10 +5,13 @@
     <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
     <!--
     android:name="${applicationName}"
-    android:name="io.flutter.app.FlutterApplication" -->
+    android:name="io.flutter.app.FlutterApplication"
+    android:label="its my live"
+    android:label="@string/app_name"
+    -->
     <application
         android:name="${applicationName}"
-        android:label="It's my Live"
+        android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"

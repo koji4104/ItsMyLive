@@ -92,13 +92,14 @@ class Environment {
     keys:['1','2','3','4'],
     name:'url_num',
   );
-  String url1 = 'rtmp://xxx/1';
+
+  String url1 = 'rtmp://';
   String key1 = '';
-  String url2 = 'rtmp://xxx/2';
+  String url2 = 'rtmp://';
   String key2 = '';
-  String url3 = 'rtmp://xxx/3';
+  String url3 = 'rtmp://';
   String key3 = '';
-  String url4 = 'rtmp://xxx/4';
+  String url4 = 'rtmp://';
   String key4 = '';
 
   String getUrl({int? num}){
@@ -139,8 +140,8 @@ class Environment {
       _loadSub(prefs, camera_height);
       _loadSub(prefs, camera_pos);
 
-      url1 = prefs.getString('url1') ?? '';
-      key1 = prefs.getString('key1') ?? '';
+      //url1 = prefs.getString('url1') ?? '';
+      //key1 = prefs.getString('key1') ?? '';
       url2 = prefs.getString('url2') ?? '';
       key2 = prefs.getString('key2') ?? '';
       url3 = prefs.getString('url3') ?? '';
@@ -179,8 +180,70 @@ class Environment {
 }
 
 //----------------------------------------------------------
+class BaseSettingsScreen extends ConsumerWidget {
+  late BuildContext _context;
+  late WidgetRef _ref;
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    _context = context;
+    _ref = ref;
+    return Container();
+  }
+  Widget MyText(String label) {
+    return Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical:10, horizontal:20),
+          child: Text(label, style:TextStyle(fontSize:13, color:Colors.white)),
+        )
+    );
+  }
+
+  Widget MyListTile({required Widget title, required Function() onTap}) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal:8, vertical:3),
+      child: ListTile(
+        shape: BeveledRectangleBorder(
+          borderRadius: BorderRadius.circular(3),
+        ),
+        title: title,
+        trailing: Icon(Icons.arrow_forward_ios),
+        tileColor: Color(0xFF333333),
+        hoverColor: Color(0xFF444444),
+        onTap: onTap
+      ),
+    );
+  }
+
+  Widget MyRadioListTile(
+      { required String title,
+        required int value,
+        required int groupValue,
+        required void Function(int?)? onChanged}) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal:14, vertical:0),
+      child: RadioListTile(
+        shape: BeveledRectangleBorder(
+          borderRadius: BorderRadius.circular(3),
+        ),
+        tileColor: Color(0xFF333333),
+        activeColor: Colors.blueAccent,
+        title: Text(l10n(title)),
+        value: value,
+        groupValue: groupValue,
+        onChanged: onChanged,
+      )
+    );
+  }
+
+  String l10n(String text) {
+    return Localized.of(this._context).text(text);
+  }
+}
+
+//----------------------------------------------------------
 final settingsScreenProvider = ChangeNotifierProvider((ref) => ChangeNotifier());
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends BaseSettingsScreen {
   SettingsScreen(){}
   Environment env = new Environment();
   bool bInit = false;
@@ -190,15 +253,13 @@ class SettingsScreen extends ConsumerWidget {
       bInit = true;
     try {
       await env.load();
-      _ref!.read(settingsScreenProvider).notifyListeners();
+      _ref.read(settingsScreenProvider).notifyListeners();
     } on Exception catch (e) {
       print('-- SettingsScreen init e=' + e.toString());
     }
     return true;
   }
 
-  BuildContext? _context;
-  WidgetRef? _ref;
   MyEdge _edge = MyEdge(provider:settingsScreenProvider);
 
   @override
@@ -240,7 +301,6 @@ class SettingsScreen extends ConsumerWidget {
         MyValue(data: env.video_kbps),
         MyValue(data: env.video_fps),
         MyValue(data: env.autostop_sec),
-        MyText(Localized.of(context).text("precautions")),
         MyListTile(
           title:Text('Logs'),
           onTap:(){
@@ -255,75 +315,40 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget MyText(String label) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical:10, horizontal:20),
-        child: Text(label, style:TextStyle(fontSize:12, color:Colors.white)),
-      )
-    );
-  }
-
-  Widget MyListTile({required Widget title, required Function() onTap}) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal:14, vertical:3),
-      child: ListTile(
-        shape: BeveledRectangleBorder(
-          borderRadius: BorderRadius.circular(3),
-        ),
-        title: title,
-        trailing: Icon(Icons.arrow_forward_ios),
-        tileColor: Color(0xFF333333),
-        hoverColor: Color(0xFF444444),
-        onTap: onTap
-      ),
-    );
-  }
-
   Widget MyValue({required EnvData data, bool? isUrl}) {
     TextStyle ts = TextStyle(fontSize:16, color:Colors.white);
     return MyListTile(
       title:Row(children:[
-        Text(l10n(data.name), style:ts),
+        if(isUrl==null) Text(l10n(data.name), style:ts),
         Expanded(child: SizedBox(width:1)),
-        isUrl!=null
-        ? Text(env.getUrl(), style:ts)
-        : Text(data.key, style:ts),
+        isUrl==null
+        ? Text(data.key, style:ts)
+        : Text(env.getUrl(), style:ts),
       ]),
       onTap:() {
-        Navigator.of(_context!).push(
+        Navigator.of(_context).push(
           MaterialPageRoute<int>(
             builder: (BuildContext context) {
               return RadioListScreen(data: data, isUrl:isUrl);
           })).then((ret) {
             if (ret==1) {
               env.load();
-              _ref!.read(settingsScreenProvider).notifyListeners();
+              _ref.read(settingsScreenProvider).notifyListeners();
             }
           }
         );
       }
     );
   }
-
-  String l10n(String text){
-    return Localized.of(_context!).text(text);
-  }
 }
 
 //----------------------------------------------------------
-final radioSelectedProvider = StateProvider<int>((ref) {
-  return 0;
-});
 final radioListScreenProvider = ChangeNotifierProvider((ref) => ChangeNotifier());
-class RadioListScreen extends ConsumerWidget {
+class RadioListScreen extends BaseSettingsScreen {
   int selValue = 0;
   int selValueOld = 0;
   int selIndex = 0;
   late EnvData data;
-  WidgetRef? ref;
-  BuildContext? context;
   MyEdge _edge = MyEdge(provider:radioListScreenProvider);
   bool isUrl = false;
   Environment env = Environment();
@@ -344,10 +369,9 @@ class RadioListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(radioSelectedProvider);
+    this._context = context;
+    this._ref = ref;
     ref.watch(radioListScreenProvider);
-    this.context = context;
-    this.ref = ref;
     _edge.getEdge(context,ref);
 
     return WillPopScope(
@@ -375,19 +399,13 @@ class RadioListScreen extends ConsumerWidget {
     List<Widget> list = [];
     for(int i=0; i<data.vals.length; i++){
       list.add(
-        Container(
-          margin: EdgeInsets.symmetric(horizontal:14, vertical:0),
-          child: RadioListTile(
-          shape: BeveledRectangleBorder(
-            borderRadius: BorderRadius.circular(3),
-          ),
-          tileColor: Color(0xFF333333),
-          activeColor: Colors.blueAccent,
-          title: isUrl ? Text(env.getUrl(num:i+1)) : Text(l10n(data.keys[i])),
-          value: data.vals[i],
-          groupValue: selValue,
-          onChanged: (value) => _onRadioSelected(data.vals[i], i),
-      )));
+          MyRadioListTile(
+            title: data.keys[i],
+            value: data.vals[i],
+            groupValue: selValue,
+            onChanged:(value) => _onRadioSelected(data.vals[i], i),
+          )
+      );
     }
     if(isUrl){
       Widget btn = TextButton(
@@ -399,14 +417,14 @@ class RadioListScreen extends ConsumerWidget {
         ),
         child: Text('EDIT ' + selValue.toString(), style:TextStyle(fontSize:16, color:Colors.white)),
         onPressed:() {
-          Navigator.of(context!).push(
+          Navigator.of(_context).push(
             MaterialPageRoute<int>(
               builder: (BuildContext context) {
                 return UrlScreen(num: selIndex + 1, env: env);
               })).then((ret) {
                 if(ret==1) {
                   env.load().then((_){
-                    ref!.read(radioListScreenProvider).notifyListeners();
+                    _ref.read(radioListScreenProvider).notifyListeners();
                   });
                 }
               }
@@ -419,40 +437,24 @@ class RadioListScreen extends ConsumerWidget {
       list.add(w);
     }
 
-    list.add(MyText(data.name+'_desc'));
+    list.add(MyText(l10n(data.name+'_desc')));
     return Column(children:list);
   }
 
   _onRadioSelected(value, index) {
-    if(ref!=null){
-      selValue = value;
-      selIndex = index;
-      ref!.read(radioSelectedProvider.state).state = selValue;
-    };
-  }
-
-  String l10n(String text) {
-    if(this.context!=null)
-      return Localized.of(this.context!).text(text);
-    else
-      return text;
-  }
-
-  Widget MyText(String label) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal:10, vertical:6),
-      child: Align(
-      alignment: Alignment.centerLeft,
-      child: Text(l10n(label), style:TextStyle(fontSize:13, color:Colors.white)),
-    ));
+    selValue = value;
+    selIndex = index;
+    _ref.watch(radioListScreenProvider).notifyListeners();
   }
 }
 
 //----------------------------------------------------------
 final urlScreenProvider = ChangeNotifierProvider((ref) => ChangeNotifier());
-class UrlScreen extends ConsumerWidget {
+class UrlScreen extends BaseSettingsScreen {
   Environment env = Environment();
   int num = 1;
+  late TextEditingController _urlController;
+  late TextEditingController _keyController;
   UrlScreen({int? num, Environment? env}){
     if(num!=null) this.num = num;
     if(env!=null) this.env = env;
@@ -460,19 +462,24 @@ class UrlScreen extends ConsumerWidget {
     _key = this.env.getKey(num:this.num);
     _urlOld = _url;
     _keyOld = _key;
+    _urlController = TextEditingController(text:_url);
+    _keyController = TextEditingController(text:_key);
   }
   MyEdge _edge = MyEdge(provider:urlScreenProvider);
   String _url = '';
   String _key = '';
   String _urlOld = '';
   String _keyOld = '';
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    this._context = context;
+    this._ref = ref;
     _edge.getEdge(context,ref);
-
     return WillPopScope(
       onWillPop:() async {
         int r = 0;
+        _url = _urlController.text;
         if(_url!=_urlOld) {
           env.saveUrl(_url, num);
           r = 1;
@@ -494,27 +501,18 @@ class UrlScreen extends ConsumerWidget {
             MyText('URL'),
             TextField(
               style: TextStyle(color:Colors.white),
-              onChanged:(s){_url = s;},
-              controller: TextEditingController(text: _url),
+              //onChanged:(s){_url=s;},
+              controller: _urlController,
+              keyboardType: TextInputType.url,
             ),
             MyText('KEY'),
             TextField(
               style: TextStyle(color:Colors.white),
-              onChanged:(s){_key = s;},
-              controller: TextEditingController(text: _key),
+              onChanged:(s){_key=s;},
+              controller: TextEditingController(text:_key),
             ),
           ])
         ),
-      )
-    );
-  }
-
-  Widget MyText(String label) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(0,12,0,0),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Text(label, style:TextStyle(fontSize:13, color:Colors.grey)),
       )
     );
   }

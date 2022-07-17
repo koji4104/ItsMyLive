@@ -1,6 +1,6 @@
 #!/bin/sh
 # This is a generated file; do not edit or check into version control.
-export "FLUTTER_ROOT=/Users/koji4104/A/dev/flutter_longtake_2_10_5"
+export "FLUTTER_ROOT=/Users/koji4104/A/dev/3.0.4"
 export "FLUTTER_APPLICATION_PATH=/Users/koji4104/A/pg/flutter/ItsMyLive"
 export "COCOAPODS_PARALLEL_CODE_SIGN=true"
 export "FLUTTER_TARGET=/Users/koji4104/A/pg/flutter/ItsMyLive/lib/main.dart"
