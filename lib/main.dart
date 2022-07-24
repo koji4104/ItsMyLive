@@ -30,10 +30,16 @@ class MyApp extends ConsumerWidget {
         pageTransitionsTheme: MyPageTransitionsTheme(),
       ),
       home: CameraScreen(),
+      //localizationsDelegates: [
+      //  const SampleLocalizationsDelegate(),
+      //  GlobalMaterialLocalizations.delegate,
+      //  GlobalWidgetsLocalizations.delegate,
+      //],
       localizationsDelegates: [
         const SampleLocalizationsDelegate(),
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: [
         const Locale('en',''),

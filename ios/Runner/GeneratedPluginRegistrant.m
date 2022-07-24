@@ -18,10 +18,10 @@
 @import battery_plus;
 #endif
 
-#if __has_include(<camera/CameraPlugin.h>)
-#import <camera/CameraPlugin.h>
+#if __has_include(<camera_avfoundation/CameraPlugin.h>)
+#import <camera_avfoundation/CameraPlugin.h>
 #else
-@import camera;
+@import camera_avfoundation;
 #endif
 
 #if __has_include(<haishin_kit/HaishinKitPlugin.h>)

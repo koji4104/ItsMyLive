@@ -15,10 +15,12 @@ import 'log_screen.dart';
 import 'common.dart';
 
 import 'package:audio_session/audio_session.dart';
+import 'package:haishin_kit/audio_settings.dart';
 import 'package:haishin_kit/audio_source.dart';
 import 'package:haishin_kit/net_stream_drawable_texture.dart';
 import 'package:haishin_kit/rtmp_connection.dart';
 import 'package:haishin_kit/rtmp_stream.dart';
+import 'package:haishin_kit/video_settings.dart';
 import 'package:haishin_kit/video_source.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -52,10 +54,11 @@ class CameraScreen extends ConsumerWidget {
 
   void init(BuildContext context, WidgetRef ref) {
     if(_bInit == false){
-      print('-- init()');
+      print('-- CameraScreen.init()');
       _bInit = true;
       _timer = Timer.periodic(Duration(seconds:1), _onTimer);
       _env.load();
+      _envOld = _env;
       initPlatformState();
     }
   }
@@ -135,6 +138,15 @@ class CameraScreen extends ConsumerWidget {
                   builder: (context) => SettingsScreen(),
                 )
               );
+              await _env.load();
+              if(_envOld.video_kbps.val != _env.video_kbps.val
+              || _envOld.camera_height.val != _env.camera_height.val
+              || _envOld.video_fps.val != _env.video_fps.val
+              || _envOld.getUrl() != _env.getUrl()
+              || _envOld.getKey() != _env.getKey() ){
+                _envOld = _env;
+                initPlatformState();
+              }
             }
           ),
 
@@ -171,6 +183,7 @@ class CameraScreen extends ConsumerWidget {
   }
 
   Future<void> initPlatformState() async {
+    if(disableCamera) return;
     await Permission.camera.request();
     await Permission.microphone.request();
 
@@ -181,6 +194,11 @@ class CameraScreen extends ConsumerWidget {
       avAudioSessionCategoryOptions:
       AVAudioSessionCategoryOptions.allowBluetooth,
     ));
+
+    if(_stream != null)
+      await _stream!.close();
+    if(_connection != null)
+      _connection!.close();
 
     _connection = await RtmpConnection.create();
     if(_connection!=null) {
@@ -194,6 +212,12 @@ class CameraScreen extends ConsumerWidget {
 
       _stream = await RtmpStream.create(_connection!);
       if(_stream!=null) {
+        _stream!.audioSettings = AudioSettings(muted: false, bitrate: 128 * 1000);
+        _stream!.videoSettings = VideoSettings(
+          width: (_env.camera_height.val*16/9).toInt(),
+          height: _env.camera_height.val,
+          bitrate: _env.video_kbps.val * 1024,
+        );
         _stream!.attachAudio(AudioSource());
         _stream!.attachVideo(VideoSource(position:_env.camera_pos.val==0 ? CameraPosition.back : CameraPosition.front));
         _ref.read(cameraScreenProvider).notifyListeners();
@@ -230,16 +254,17 @@ class CameraScreen extends ConsumerWidget {
     return Center(
       child: Transform.scale(
         scale: _scale,
-        child: OrientationCamera(
-        child: AspectRatio(
-          aspectRatio: _aspect,
-          child: NetStreamDrawableTexture(_stream),
-        ),
-      ),),
+        //child: OrientationCamera(
+          child: AspectRatio(
+            aspectRatio: _aspect,
+            child: NetStreamDrawableTexture(_stream),
+          ),
+        //),
+      ),
     );
   }
 
-  /// スイッチ
+  /// Switch
   Future<void> _onCameraSwitch(WidgetRef ref) async {
     if(_stream!=null) {
       int pos = _env.camera_pos.val==0 ? 1 : 0;
@@ -271,6 +296,7 @@ class CameraScreen extends ConsumerWidget {
 
     try {
       _connection!.connect(_env.getUrl());
+
       MyLog.info("Start " + _env.getUrl());
       _startTime = DateTime.now();
       _batteryLevelStart = await _battery.batteryLevel;
@@ -304,7 +330,6 @@ class CameraScreen extends ConsumerWidget {
       if(_connection==null || _stream==null)
         return;
 
-      _stream!.close();
       _connection!.close();
 
     } on Exception catch (e) {
