@@ -146,12 +146,12 @@ class LogScreen extends ConsumerWidget {
     List<TextSpan> spans = [];
     TextStyle tsErr = TextStyle(color:Color(0xFFFF8888));
     TextStyle tsWarn = TextStyle(color:Color(0xFFeeee44));
-    TextStyle tsTime = TextStyle(color:Color(0xFFeeeeFF));
+    TextStyle tsTime = TextStyle(color:Color(0xFFcccccc));
 
     for(MyLogData d in list) {
       String stime = DateFormat("yyyy-MM-dd HH:mm").format(DateTime.parse(d.time));
       Wrap w = Wrap(children:[getText(stime),getText(d.msg)]);
-      spans.add(TextSpan(text:stime));
+      spans.add(TextSpan(text:stime, style:tsTime));
       if (d.level.contains('err'))
         spans.add(TextSpan(text: ' '+d.level, style:tsErr));
       else if (d.level.contains('warn'))

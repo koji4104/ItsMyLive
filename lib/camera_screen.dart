@@ -13,6 +13,7 @@ import 'provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'log_screen.dart';
 import 'common.dart';
+import 'environment.dart';
 
 import 'package:audio_session/audio_session.dart';
 import 'package:haishin_kit/audio_settings.dart';
@@ -48,6 +49,8 @@ class CameraScreen extends ConsumerWidget {
   late BuildContext _context;
   AppLifecycleState? _state;
   MyEdge _edge = MyEdge(provider:cameraScreenProvider);
+
+  String strRunningMin = '';
 
   RtmpConnection? _connection;
   RtmpStream? _stream;
@@ -122,7 +125,7 @@ class CameraScreen extends ConsumerWidget {
         // Switch
         if(_isSaver==false)
           MyButton(
-            top: 50.0, right: 30.0,
+            bottom: 40.0, right: 30.0,
             icon: Icon(Icons.flip_camera_ios, color: Colors.white),
             onPressed:() => _onCameraSwitch(ref),
           ),
@@ -158,9 +161,9 @@ class CameraScreen extends ConsumerWidget {
               padding: EdgeInsets.fromLTRB(10,8,10,8),
               decoration: BoxDecoration(
                 color: Colors.black54,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(30),
               ),
-              child: Text(_isConnecting ? 'Connecting' : _isRunning ? 'Publishing' : 'Stop' + getRunningMin(),
+              child: Text(_isConnecting ? 'Connecting' : _isRunning ? strRunningMin : 'Stop',
                 textAlign:TextAlign.center,
                 style: TextStyle(fontSize:16,
                     color: _isConnecting ? Colors.blueAccent : _isRunning ? Colors.redAccent : Colors.white)
@@ -176,7 +179,6 @@ class CameraScreen extends ConsumerWidget {
                 _ref.read(isSaverProvider.state).state = !_isSaver;
               }
           ),
-
         ]
       ),
     ));
@@ -205,7 +207,10 @@ class CameraScreen extends ConsumerWidget {
       _connection!.eventChannel.receiveBroadcastStream().listen((event) {
         switch (event["data"]["code"]) {
           case 'NetConnection.Connect.Success':
-            _stream?.publish(_env.getKey());
+            _stream?.publish(_env.getKey()).then((_){
+              _startTime = DateTime.now();
+              _ref.read(isConnectingProvider.state).state = false;
+            });
             break;
         }
       });
@@ -230,7 +235,7 @@ class CameraScreen extends ConsumerWidget {
     if(disableCamera || _stream == null) {
       return Positioned(
         left:0, top:0, right:0, bottom:0,
-        child: Container(color: Color(0xFF666688)));
+        child: Container(color: Color(0xFF888888)));
     }
 
     Size _screenSize = MediaQuery.of(context).size;
@@ -298,7 +303,7 @@ class CameraScreen extends ConsumerWidget {
       _connection!.connect(_env.getUrl());
 
       MyLog.info("Start " + _env.getUrl());
-      _startTime = DateTime.now();
+      //_startTime = DateTime.now();
       _batteryLevelStart = await _battery.batteryLevel;
       _ref.read(isRunningProvider.state).state = true;
       _ref.read(isConnectingProvider.state).state = true;
@@ -347,10 +352,16 @@ class CameraScreen extends ConsumerWidget {
       return;
     }
 
+    String min = getRunningMin();
+    if(strRunningMin != min){
+      strRunningMin = min;
+      _ref.read(cameraScreenProvider).notifyListeners();
+    }
+
     Duration dur = DateTime.now().difference(_startTime!);
 
     // 30秒後に成功してないときSTOP
-    //if(_isRunning==true && _controller!.isStreaming==false) {
+    //if(_isRunning==true && _isConnecting==true) {
     //  if(dur.inSeconds > 30){
     //    onStop();
     //    return;
@@ -417,9 +428,9 @@ class CameraScreen extends ConsumerWidget {
     if (_startTime != null) {
       Duration dur = DateTime.now().difference(_startTime!);
       if(dur.inSeconds<60)
-        s = ' ' + dur.inSeconds.toString() + 'sec';
+        s = dur.inSeconds.toString() + ' sec';
       else
-        s = ' ' + dur.inMinutes.toString() + 'min';
+        s = dur.inMinutes.toString() + ' min';
     }
     return s;
   }
