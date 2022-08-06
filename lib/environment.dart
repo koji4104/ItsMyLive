@@ -66,8 +66,8 @@ class Environment {
 
   EnvData video_kbps = EnvData(
     val:1000,
-    vals:[500,1000,2000,4000],
-    keys:['500 kbps','1000 kbps','2000 kbps','4000 kbps'],
+    vals:[500,1000,2000,4000,8000],
+    keys:['500 kbps','1000 kbps','2000 kbps','4000 kbps','8000 kbps'],
     name:'video_kbps',
   );
 
@@ -140,8 +140,8 @@ class Environment {
       _loadSub(prefs, camera_height);
       _loadSub(prefs, camera_pos);
 
-      //url1 = prefs.getString('url1') ?? '';
-      //key1 = prefs.getString('key1') ?? '';
+      url1 = prefs.getString('url1') ?? '';
+      key1 = prefs.getString('key1') ?? '';
       url2 = prefs.getString('url2') ?? '';
       key2 = prefs.getString('key2') ?? '';
       url3 = prefs.getString('url3') ?? '';

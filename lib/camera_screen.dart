@@ -50,7 +50,7 @@ class CameraScreen extends ConsumerWidget {
   AppLifecycleState? _state;
   MyEdge _edge = MyEdge(provider:cameraScreenProvider);
 
-  String strRunningMin = '';
+  RunningStateScreen _RunningState = RunningStateScreen();
 
   RtmpConnection? _connection;
   RtmpStream? _stream;
@@ -86,7 +86,7 @@ class CameraScreen extends ConsumerWidget {
 
     this._isSaver = ref.watch(isSaverProvider);
     this._isRunning = ref.watch(isRunningProvider);
-    this._isConnecting = ref.watch(isConnectingProvider);
+    this._startTime = ref.watch(startTimeProvider);
     _edge.getEdge(context,ref);
 
     return Scaffold(
@@ -111,7 +111,7 @@ class CameraScreen extends ConsumerWidget {
         if(_isSaver==false)
           _cameraWidget(context),
 
-        // START
+        // Start
         //if (_isSaver==false)
           MyButton(
             bottom: 40.0, left:0, right:0,
@@ -163,11 +163,7 @@ class CameraScreen extends ConsumerWidget {
                 color: Colors.black54,
                 borderRadius: BorderRadius.circular(30),
               ),
-              child: Text(_isConnecting ? 'Connecting' : _isRunning ? strRunningMin : 'Stop',
-                textAlign:TextAlign.center,
-                style: TextStyle(fontSize:16,
-                    color: _isConnecting ? Colors.blueAccent : _isRunning ? Colors.redAccent : Colors.white)
-              )
+              child: _RunningState,
             )
           ),
 
@@ -204,13 +200,16 @@ class CameraScreen extends ConsumerWidget {
 
     _connection = await RtmpConnection.create();
     if(_connection!=null) {
+
       _connection!.eventChannel.receiveBroadcastStream().listen((event) {
+        MyLog.info('connection=${event["data"]["code"]}');
         switch (event["data"]["code"]) {
           case 'NetConnection.Connect.Success':
             _stream?.publish(_env.getKey()).then((_){
-              _startTime = DateTime.now();
-              _ref.read(isConnectingProvider.state).state = false;
+              _ref.read(startTimeProvider.state).state = DateTime.now();
             });
+            break;
+          case 'NetConnection.Connect.Closed':
             break;
         }
       });
@@ -225,6 +224,17 @@ class CameraScreen extends ConsumerWidget {
         );
         _stream!.attachAudio(AudioSource());
         _stream!.attachVideo(VideoSource(position:_env.camera_pos.val==0 ? CameraPosition.back : CameraPosition.front));
+
+        _stream!.eventChannel.receiveBroadcastStream().listen((event) {
+          MyLog.info('stream=${event["data"]["code"]}');
+          switch (event["data"]["code"]) {
+            case 'NetConnection.Connect.Success':
+              break;
+            case 'NetConnection.Connect.Closed':
+              break;
+          }
+        });
+
         _ref.read(cameraScreenProvider).notifyListeners();
       }
     }
@@ -235,7 +245,7 @@ class CameraScreen extends ConsumerWidget {
     if(disableCamera || _stream == null) {
       return Positioned(
         left:0, top:0, right:0, bottom:0,
-        child: Container(color: Color(0xFF888888)));
+        child: Container(color: Color(0xFF444444)));
     }
 
     Size _screenSize = MediaQuery.of(context).size;
@@ -282,10 +292,9 @@ class CameraScreen extends ConsumerWidget {
   /// onStart
   Future<bool> onStart() async {
     if(kIsWeb) {
-      _startTime = DateTime.now();
+      _ref.read(startTimeProvider.state).state = DateTime.now();
       _batteryLevelStart = await _battery.batteryLevel;
       _ref.read(isRunningProvider.state).state = true;
-      _ref.read(isConnectingProvider.state).state = true;
       showSnackBar('onStart');
     }
 
@@ -303,10 +312,9 @@ class CameraScreen extends ConsumerWidget {
       _connection!.connect(_env.getUrl());
 
       MyLog.info("Start " + _env.getUrl());
-      //_startTime = DateTime.now();
+
       _batteryLevelStart = await _battery.batteryLevel;
       _ref.read(isRunningProvider.state).state = true;
-      _ref.read(isConnectingProvider.state).state = true;
     } catch (e) {
       await MyLog.err('${e.toString()}');
     }
@@ -317,20 +325,20 @@ class CameraScreen extends ConsumerWidget {
   Future<void> onStop() async {
     print('-- onStop');
     try {
-      String log = 'Stop';
       if(_startTime!=null) {
+        String log = 'Stop';
         Duration dur = DateTime.now().difference(_startTime!);
-        log += ' ' + dur.inMinutes.toString() + 'min';
+        if(dur.inMinutes>0)
+          log += ' ' + dur.inMinutes.toString() + 'min';
+        await MyLog.info(log);
       }
-      await MyLog.info(log);
 
-      if(_batteryLevelStart>0 && _batteryLevelStart - _batteryLevel<0) {
+      if(_batteryLevelStart>0 && (_batteryLevelStart-_batteryLevel)>0) {
         await MyLog.info("Battery ${_batteryLevelStart}->${_batteryLevel}%");
       }
 
-      _startTime = null;
+      _ref.read(startTimeProvider.state).state = null;
       _ref.read(isRunningProvider.state).state = false;
-      _ref.read(isConnectingProvider.state).state = false;
 
       if(_connection==null || _stream==null)
         return;
@@ -342,7 +350,7 @@ class CameraScreen extends ConsumerWidget {
     }
   }
 
-  /// タイマー
+  /// Timer
   void _onTimer(Timer timer) async {
     if(kIsWeb) return;
     if(this._batteryLevel<0)
@@ -352,23 +360,13 @@ class CameraScreen extends ConsumerWidget {
       return;
     }
 
-    String min = getRunningMin();
-    if(strRunningMin != min){
-      strRunningMin = min;
-      _ref.read(cameraScreenProvider).notifyListeners();
-    }
-
     Duration dur = DateTime.now().difference(_startTime!);
 
-    // 30秒後に成功してないときSTOP
-    //if(_isRunning==true && _isConnecting==true) {
-    //  if(dur.inSeconds > 30){
-    //    onStop();
-    //    return;
-    //  }
-    //}
-    
-    // 自動停止
+    if(_startTime!=null && _connection!=null) {
+      print('-- channel=${_connection!.eventChannel.name} ${_stream!.eventChannel.name}');
+    }
+
+    // Autostop
     if(_isRunning==true && _startTime!=null) {
       if (_env.autostop_sec.val > 0 && dur.inSeconds>_env.autostop_sec.val) {
         await MyLog.info("Autostop");
@@ -377,7 +375,7 @@ class CameraScreen extends ConsumerWidget {
       }
     }
 
-    // バッテリーチェック（1分毎）
+    // check battery (every 1min)
     if(_isRunning==true && DateTime.now().second == 0) {
       this._batteryLevel = await _battery.batteryLevel;
       if (this._batteryLevel < 10) {
@@ -422,16 +420,56 @@ class CameraScreen extends ConsumerWidget {
       )
     );
   }
+}
 
-  String getRunningMin() {
-    String s = '';
-    if (_startTime != null) {
-      Duration dur = DateTime.now().difference(_startTime!);
-      if(dur.inSeconds<60)
-        s = dur.inSeconds.toString() + ' sec';
-      else
-        s = dur.inMinutes.toString() + ' min';
+final runningStateProvider = ChangeNotifierProvider((ref) => ChangeNotifier());
+class RunningStateScreen extends ConsumerWidget {
+  Timer? _timer;
+  late WidgetRef _ref;
+  bool _isRunning = false;
+  DateTime? _startTime;
+  String _stateString = '';
+
+  RunningStateScreen(){
+    _timer = Timer.periodic(Duration(seconds:1), _onTimer);
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    this._ref = ref;
+    this._isRunning = ref.watch(isRunningProvider);
+    this._startTime = ref.watch(startTimeProvider);
+    _ref.watch(runningStateProvider);
+
+    return Text(_stateString,
+        textAlign:TextAlign.center,
+        style: TextStyle(fontSize:16, color: Colors.white)
+    );
+  }
+
+  void _onTimer(Timer timer) async {
+    String str = 'Stop';
+    if(_isRunning==true) {
+      if (_startTime == null) {
+        str = 'Connecting';
+      } else {
+        Duration dur = DateTime.now().difference(_startTime!);
+        str = dur2str(dur);
+      }
     }
+    if(_stateString!=str){
+      _stateString = str;
+      _ref.read(runningStateProvider).notifyListeners();
+    }
+  }
+
+  /// 01:00:00
+  String dur2str(Duration dur) {
+    String s = "";
+    if(dur.inHours>0)
+      s += dur.inHours.toString() + ':';
+    s += dur.inMinutes.remainder(60).toString().padLeft(2,'0') + ':';
+    s += dur.inSeconds.remainder(60).toString().padLeft(2,'0');
     return s;
   }
 }
@@ -454,78 +492,6 @@ class OrientationCamera extends StatelessWidget {
           }
           return Transform.rotate(angle: angle, child: child);
         }
-    );
-  }
-}
-
-final screenSaverProvider = ChangeNotifierProvider((ref) => ChangeNotifier());
-class ScreenSaver extends ConsumerWidget {
-  Timer? _timer;
-  WidgetRef? _ref;
-  Environment _env = Environment();
-
-  ScreenSaver(){
-  }
-
-  void init(WidgetRef ref) {
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    this._ref = ref;
-    Future.delayed(Duration.zero, () => init(ref));
-    ref.watch(screenSaverProvider);
-
-    return Scaffold(
-      extendBody: true,
-      body: Stack(children: <Widget>[
-        Positioned(
-          top:0, bottom:0, left:0, right:0,
-          child: TextButton(
-            child: Text(''),
-            style: ButtonStyle(backgroundColor:MaterialStateProperty.all<Color>(Colors.black)),
-            onPressed:(){
-            },
-          )
-        ),
-
-        // STOPボタン
-        Center(
-          child: Container(
-            width: 160, height: 160,
-            child: StopButton(
-              onPressed:(){
-                ref.read(isSaverProvider.state).state = false;
-                ref.read(isRunningProvider.state).state = false;
-              }
-            )
-          ),),
-        ]
-      )
-    );
-  }
-
-  void _onTimer(Timer timer) async {
-    try {
-    } on Exception catch (e) {
-      print('-- ScreenSaver _onTimer() Exception '+e.toString());
-    }
-  }
-
-  Widget StopButton({required void Function()? onPressed}) {
-    return TextButton(
-      style: TextButton.styleFrom(
-        backgroundColor: Colors.black26,
-        shape: const CircleBorder(
-          side: BorderSide(
-            color: COL_SS_TEXT,
-            width: 1,
-            style: BorderStyle.solid,
-          ),
-        ),
-      ),
-      child: Text('STOP', style:TextStyle(fontSize:16, color:COL_SS_TEXT)),
-      onPressed: onPressed,
     );
   }
 }

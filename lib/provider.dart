@@ -10,6 +10,6 @@ final isRunningProvider = StateProvider<bool>((ref) {
   return false;
 });
 
-final isConnectingProvider = StateProvider<bool>((ref) {
-  return false;
+final startTimeProvider = StateProvider<DateTime?>((ref) {
+  return null;
 });
