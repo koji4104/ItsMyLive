@@ -114,7 +114,7 @@ class CameraScreen extends ConsumerWidget {
         // Start
         //if (_isSaver==false)
           MyButton(
-            bottom: 40.0, left:0, right:0,
+            bottom: 30.0, left:0, right:0,
             icon: Icon(Icons.lens_rounded,
             color: _isConnecting ? Colors.blueAccent : _isRunning ? Colors.redAccent : Colors.white),
             onPressed:(){
@@ -125,7 +125,7 @@ class CameraScreen extends ConsumerWidget {
         // Switch
         if(_isSaver==false)
           MyButton(
-            bottom: 40.0, right: 30.0,
+            bottom: 30.0, right: 30.0,
             icon: Icon(Icons.flip_camera_ios, color: Colors.white),
             onPressed:() => _onCameraSwitch(ref),
           ),
@@ -169,7 +169,7 @@ class CameraScreen extends ConsumerWidget {
 
           // saver
           MyButton(
-              bottom: 40.0, left: 30.0,
+              bottom: 30.0, left: 30.0,
               icon: Icon(Icons.dark_mode, color:Colors.white),
               onPressed:() {
                 _ref.read(isSaverProvider.state).state = !_isSaver;
@@ -250,7 +250,6 @@ class CameraScreen extends ConsumerWidget {
 
     Size _screenSize = MediaQuery.of(context).size;
     Size _cameraSize = Size(1920,1080);
-
     double sw = _screenSize.width;
     double sh = _screenSize.height;
     double dw = sw>sh ? sw : sh;
@@ -295,7 +294,6 @@ class CameraScreen extends ConsumerWidget {
       _ref.read(startTimeProvider.state).state = DateTime.now();
       _batteryLevelStart = await _battery.batteryLevel;
       _ref.read(isRunningProvider.state).state = true;
-      showSnackBar('onStart');
     }
 
     if (_env.getUrl() == '') {
@@ -310,11 +308,9 @@ class CameraScreen extends ConsumerWidget {
 
     try {
       _connection!.connect(_env.getUrl());
-
-      MyLog.info("Start " + _env.getUrl());
-
       _batteryLevelStart = await _battery.batteryLevel;
       _ref.read(isRunningProvider.state).state = true;
+      MyLog.info("Start " + _env.getUrl());
     } catch (e) {
       await MyLog.err('${e.toString()}');
     }
@@ -340,10 +336,8 @@ class CameraScreen extends ConsumerWidget {
       _ref.read(startTimeProvider.state).state = null;
       _ref.read(isRunningProvider.state).state = false;
 
-      if(_connection==null || _stream==null)
-        return;
-
-      _connection!.close();
+      if(_connection!=null && _stream!=null)
+        _connection!.close();
 
     } on Exception catch (e) {
       MyLog.err('${e.toString()}');
@@ -353,8 +347,6 @@ class CameraScreen extends ConsumerWidget {
   /// Timer
   void _onTimer(Timer timer) async {
     if(kIsWeb) return;
-    if(this._batteryLevel<0)
-      this._batteryLevel = await _battery.batteryLevel;
 
     if(_startTime == null) {
       return;

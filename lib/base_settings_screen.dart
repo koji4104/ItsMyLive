@@ -17,11 +17,14 @@ class BaseSettingsScreen extends ConsumerWidget {
   TextStyle tsOn = TextStyle(color:Colors.lightGreenAccent);
   TextStyle tsNg = TextStyle(color:Colors.grey);
 
-  Color btnTextColor = Colors.white;
-  Color btnTileColor = Color(0xFF404040);
-  Color btnHoverColor = Color(0xFF505050);
+  Color btnTextColor = Color(0xFFFFFFFF);
+  Color btnTileColor = Color(0xFF606060);
 
+  Color textColor = Color(0xFFa0a0a0);
   Color tileColor = Color(0xFF404040);
+  Color selectedTextColor = Color(0xFFFFFFFF);
+  Color selectedTileColor = Color(0xFF404040);
+  Color activeColor = Color(0xFFFFFFFF); // radio button
   Color hoverColor = Color(0xFF505050);
 
   @override
@@ -88,19 +91,16 @@ class BaseSettingsScreen extends ConsumerWidget {
   }
 
   Widget MyButton({required String title, required Function() onTap}) {
-    Widget exp = Expanded(child: SizedBox(width:1));
     return Container(
-      padding: EdgeInsets.symmetric(vertical:8, horizontal:100),
-      child: ListTile(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(30))),
-        title: Row(children:[
-          exp,
-          Text(title,style:TextStyle(color:btnTextColor)),
-          exp
-        ]),
-        tileColor: btnTileColor,
-        hoverColor: btnHoverColor,
-        onTap: onTap
+      width: 200, height: 50,
+      padding: EdgeInsets.symmetric(vertical:6, horizontal:10),
+      child: TextButton(
+        style: TextButton.styleFrom(
+            backgroundColor: btnTileColor,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(40)))
+          ),
+        child: Text(title, style: TextStyle(color: btnTextColor, fontSize: 16.0), textAlign: TextAlign.center),
+        onPressed: onTap
       ),
     );
   }
@@ -115,8 +115,10 @@ class BaseSettingsScreen extends ConsumerWidget {
       child: RadioListTile(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(3))),
         tileColor: tileColor,
-        activeColor: Colors.white,
-        title: Text(l10n(title)),
+        activeColor: activeColor,
+        selectedTileColor: selectedTileColor,
+        selected: groupValue==value,
+        title: Text(l10n(title), style:TextStyle(color: groupValue==value ? selectedTextColor: textColor)),
         value: value,
         groupValue: groupValue,
         onChanged: onChanged,

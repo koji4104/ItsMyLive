@@ -140,8 +140,8 @@ class Environment {
       _loadSub(prefs, camera_height);
       _loadSub(prefs, camera_pos);
 
-      url1 = prefs.getString('url1') ?? '';
-      key1 = prefs.getString('key1') ?? '';
+      //url1 = prefs.getString('url1') ?? '';
+      //key1 = prefs.getString('key1') ?? '';
       url2 = prefs.getString('url2') ?? '';
       key2 = prefs.getString('key2') ?? '';
       url3 = prefs.getString('url3') ?? '';
