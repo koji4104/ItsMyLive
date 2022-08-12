@@ -55,6 +55,7 @@ class MyEdge {
       width = MediaQuery.of(context).size.width;
       print('-- getEdge() width=${width.toInt()}');
 
+      /*
       if (!kIsWeb && Platform.isAndroid) {
         print('-- isAndroid');
         NativeDeviceOrientation ori = await NativeDeviceOrientationCommunicator().orientation();
@@ -74,7 +75,7 @@ class MyEdge {
             break;
         }
       }
-
+      */
       EdgeInsetsGeometry leftEdge = EdgeInsets.all(0.0);
       if (MediaQuery.of(context).size.width > 700) {
         leftEdge = EdgeInsets.only(left: leftMargin);
