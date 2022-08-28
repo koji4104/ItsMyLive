@@ -38,7 +38,6 @@ class CameraScreen extends ConsumerWidget {
 
   Timer? _timer;
   Environment _env = Environment();
-  Environment _envOld = Environment();
 
   final Battery _battery = Battery();
   int _batteryLevel = -1;
@@ -60,8 +59,6 @@ class CameraScreen extends ConsumerWidget {
       print('-- CameraScreen.init()');
       _bInit = true;
       _timer = Timer.periodic(Duration(seconds:1), _onTimer);
-      _env.load();
-      _envOld = _env;
       initPlatformState();
     }
   }
@@ -81,6 +78,7 @@ class CameraScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     this._ref = ref;
     this._context = context;
+    this._env = ref.watch(environmentProvider).env;
     Future.delayed(Duration.zero, () => init(context,ref));
     ref.watch(cameraScreenProvider);
 
@@ -136,18 +134,20 @@ class CameraScreen extends ConsumerWidget {
             top: 50.0, left: 30.0,
             icon: Icon(Icons.settings, color:Colors.white),
             onPressed:() async {
+              int video_kbps = _env.video_kbps.val;
+              int camera_height = _env.camera_height.val;
+              int video_fps = _env.video_fps.val;
+
               await Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => SettingsScreen(),
                 )
               );
-              await _env.load();
-              if(_envOld.video_kbps.val != _env.video_kbps.val
-              || _envOld.camera_height.val != _env.camera_height.val
-              || _envOld.video_fps.val != _env.video_fps.val
-              || _envOld.getUrl() != _env.getUrl()
-              || _envOld.getKey() != _env.getKey() ){
-                _envOld = _env;
+
+              if(video_kbps != _env.video_kbps.val
+              || camera_height != _env.camera_height.val
+              || video_fps != _env.video_fps.val){
+                print('-- change env');
                 initPlatformState();
               }
             }

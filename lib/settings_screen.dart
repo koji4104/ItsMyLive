@@ -9,31 +9,22 @@ import 'base_settings_screen.dart';
 class SettingsScreen extends BaseSettingsScreen {
   @override
   Future init() async {
-    if(bInit) return;
-    super.init();
-    bInit = true;
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     baseBuild(context, ref);
-    return WillPopScope(
-      onWillPop: () async {
-        Navigator.of(context).pop(true);
-        return Future.value(false);
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(l10n("settings_title")),
-          backgroundColor:Color(0xFF000000),
-          actions: <Widget>[],
-        ),
-        body: Container(
-          margin: edge.settingsEdge,
-          child: Stack(children: <Widget>[
-            getList(context),
-          ])
-        )
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n("settings_title")),
+        backgroundColor:Color(0xFF000000),
+        actions: <Widget>[],
+      ),
+      body: Container(
+        margin: edge.settingsEdge,
+        child: Stack(children: <Widget>[
+          getList(context),
+        ])
       )
     );
   }
@@ -79,43 +70,26 @@ class SettingsScreen extends BaseSettingsScreen {
 //----------------------------------------------------------
 class RadioListScreen extends BaseSettingsScreen {
   int selVal = 0;
-  int selOld = 0;
   late EnvData data;
 
   RadioListScreen({required EnvData data}){
     this.data = data;
     selVal = data.val;
-    selOld = selVal;
   }
 
   @override
   Future init() async {
-    if(bInit) return;
-    super.init();
-    bInit = true;
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     baseBuild(context, ref);
-    return WillPopScope(
-      onWillPop:() async {
-        int r = 0;
-        if(selOld!=selVal) {
-          data.set(selVal);
-          env.save(data);
-          r = 1;
-        }
-        Navigator.of(context).pop(r);
-        return Future.value(true);
-      },
-      child: Scaffold(
-        appBar: AppBar(title: Text(l10n(data.name)), backgroundColor:Color(0xFF000000),),
-        body: Container(
-          margin: edge.settingsEdge,
-          child:getList()
-        ),
-      )
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n(data.name)), backgroundColor:Color(0xFF000000),),
+      body: Container(
+        margin: edge.settingsEdge,
+        child:getList()
+      ),
     );
   }
 
@@ -137,47 +111,29 @@ class RadioListScreen extends BaseSettingsScreen {
 
   _onRadioSelected(value) {
     selVal = value;
-    redraw();
+    ref.read(environmentProvider).saveData(data,selVal);
   }
 }
 
 //----------------------------------------------------------
 class SelectUrlScreen extends BaseSettingsScreen {
   int selVal = 0;
-  int selOld = 0;
-  late EnvData data;
 
   @override
   Future init() async {
-    if(bInit) return;
-    await env.load();
     selVal = env.url_num.val;
-    selOld = selVal;
     redraw();
-    bInit = true;
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     baseBuild(context, ref);
-    return WillPopScope(
-      onWillPop:() async {
-        int r = 0;
-        if(selOld!=selVal) {
-          env.url_num.set(selVal);
-          env.save(env.url_num);
-          r = 1;
-        }
-        Navigator.of(context).pop(r);
-        return Future.value(false);
-      },
-      child: Scaffold(
-        appBar: AppBar(title: Text('URL'), backgroundColor:Color(0xFF000000),),
-        body: Container(
-          margin: edge.settingsEdge,
-          child:getList(),
-        ),
-      )
+    return Scaffold(
+      appBar: AppBar(title: Text('URL'), backgroundColor:Color(0xFF000000)),
+      body: Container(
+        margin: edge.settingsEdge,
+        child:getList(),
+      ),
     );
   }
 
@@ -211,9 +167,7 @@ class SelectUrlScreen extends BaseSettingsScreen {
       MyButton(
         title: 'EDIT URL' + selVal.toString(),
         onTap:() async {
-          int ret = await NavigatorPush(EditUrlScreen(num: selVal, env: env));
-          if(ret==1)
-            selOld = 0;
+          await NavigatorPush(EditUrlScreen(selVal));
         }
       ),
     ]);
@@ -221,67 +175,42 @@ class SelectUrlScreen extends BaseSettingsScreen {
 
   _onRadioSelected(value) {
     selVal = value;
-    redraw();
+    ref.read(environmentProvider).saveData(env.url_num,selVal);
   }
 }
 
 //----------------------------------------------------------
 class EditUrlScreen extends BaseSettingsScreen {
   int num = 1;
-  late TextEditingController _urlController;
-  late TextEditingController _keyController;
-
-  // num=1-4
-  EditUrlScreen({int? num, Environment? env}){
-    if(num!=null) this.num = num;
-    if(env!=null) this.env = env;
-    _url = this.env.getUrl(num:this.num);
-    _key = this.env.getKey(num:this.num);
-    _urlOld = _url;
-    _keyOld = _key;
-    _urlController = TextEditingController(text:_url);
-    _keyController = TextEditingController(text:_key);
-  }
-
   String _url = '';
   String _key = '';
   String _urlOld = '';
   String _keyOld = '';
+  late TextEditingController _urlController;
+  late TextEditingController _keyController;
+
+  // num=1-4
+  EditUrlScreen(int num){
+    this.num = num;
+    _url = _urlOld = this.env.getUrl(num:this.num);
+    _key = _urlOld = this.env.getKey(num:this.num);
+    _urlController = TextEditingController(text:_url);
+    _keyController = TextEditingController(text:_key);
+  }
 
   @override
   Future init() async {
-    if(bInit) return;
-    super.init();
-    bInit = true;
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     baseBuild(context, ref);
-    return WillPopScope(
-      onWillPop:() async {
-        int r = 0;
-        _url = _urlController.text;
-        _key = _keyController.text;
-        if(_url!=_urlOld) {
-          env.saveUrl(_url, num);
-          r = 1;
-        }
-        if(_key!=_keyOld) {
-          env.saveKey(_key, num);
-          r = 1;
-        }
-        print('-- onWillPop() ${_url} ${_key}');
-        Navigator.of(context).pop(r);
-        return Future.value(true);
-      },
-      child: Scaffold(
-        appBar: AppBar(title: Text('URL ${num}'), backgroundColor:Color(0xFF000000),),
-        body: Container(
-          margin: edge.settingsEdge,
-          child:getList(),
-        ),
-      )
+    return Scaffold(
+      appBar: AppBar(title: Text('URL ${num}'), backgroundColor:Color(0xFF000000)),
+      body: Container(
+        margin: edge.settingsEdge,
+        child:getList(),
+      ),
     );
   }
 
@@ -294,6 +223,16 @@ class EditUrlScreen extends BaseSettingsScreen {
       MyLabel('KEY'),
       MyTextField(controller:_keyController),
       MyLabel(''),
+      MyButton(
+          title: 'Save',
+          ok: true,
+          onTap:() async {
+            _url = _urlOld = _urlController.text;
+            _key = _keyOld = _keyController.text;
+            ref.read(environmentProvider).saveUrl(num,_url);
+            ref.read(environmentProvider).saveKey(num,_key);
+          }
+      ),
       MyButton(
           title: 'Undo',
           onTap:() async {

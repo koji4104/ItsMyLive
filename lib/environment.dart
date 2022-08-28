@@ -104,8 +104,7 @@ class Environment {
 
   String getUrl({int? num}){
     String r = url1;
-    int i = url_num.val;
-    if(num!=null) i = num;
+    int i = (num==null) ? url_num.val : num;
     switch(i){
       case 1: r = url1; break;
       case 2: r = url2; break;
@@ -117,8 +116,7 @@ class Environment {
 
   String getKey({int? num}){
     String r = key1;
-    int i = url_num.val;
-    if(num!=null) i = num;
+    int i = (num==null) ? url_num.val : num;
     switch(i){
       case 1: r = key1; break;
       case 2: r = key2; break;
@@ -126,6 +124,24 @@ class Environment {
       case 4: r = key4; break;
     }
     return r;
+  }
+
+  void setUrl({required int num, required String url}){
+    switch(num){
+      case 1: url1 = url; break;
+      case 2: url2 = url; break;
+      case 3: url3 = url; break;
+      case 4: url4 = url; break;
+    }
+  }
+
+  void setKey({required int num, required String key}){
+    switch(num){
+      case 1: key1 = key; break;
+      case 2: key2 = key; break;
+      case 3: key3 = key; break;
+      case 4: key4 = key; break;
+    }
   }
 
   Future load() async {
@@ -139,9 +155,10 @@ class Environment {
       _loadSub(prefs, autostop_sec);
       _loadSub(prefs, camera_height);
       _loadSub(prefs, camera_pos);
+      _loadSub(prefs, publish_mode);
 
-      //url1 = prefs.getString('url1') ?? '';
-      //key1 = prefs.getString('key1') ?? '';
+      url1 = prefs.getString('url1') ?? '';
+      key1 = prefs.getString('key1') ?? '';
       url2 = prefs.getString('url2') ?? '';
       key2 = prefs.getString('key2') ?? '';
       url3 = prefs.getString('url3') ?? '';
@@ -176,5 +193,71 @@ class Environment {
     String name = 'key' + num.toString();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(name, key);
+  }
+}
+
+final environmentProvider = ChangeNotifierProvider((ref) => environmentNotifier(ref));
+class environmentNotifier extends ChangeNotifier {
+  Environment env = Environment();
+
+  environmentNotifier(ref){
+    env.load().then((_){
+      this.notifyListeners();
+    });
+  }
+
+  Future saveData(EnvData data, int newVal) async {
+    if(data.val == newVal)
+      return;
+    roundVal(data, newVal);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(data.name, data.val);
+    this.notifyListeners();
+  }
+
+  roundVal(EnvData data, int newVal){
+    for (var i=0; i<data.vals.length; i++){
+      if (newVal <= data.vals[i]){
+        getData(data).val = data.vals[i];
+        getData(data).key = data.keys[i];
+        return;
+      }
+    }
+    getData(data).val = data.vals[0];
+    getData(data).key = data.keys[0];
+  }
+
+  EnvData getData(EnvData data){
+    EnvData ret = env.publish_mode;
+    switch(data.name){
+      case 'url_num': ret = env.url_num; break;
+      case 'video_fps': ret = env.video_fps; break;
+      case 'video_kbps': ret = env.video_kbps; break;
+      case 'autostop_sec': ret = env.autostop_sec; break;
+      case 'camera_height': ret = env.camera_height; break;
+      case 'camera_pos': ret = env.camera_pos; break;
+      case 'publish_mode': ret = env.publish_mode; break;
+    }
+    return ret;
+  }
+
+  Future saveUrl(int num, String url) async {
+    if(num<1 && 4<num) return;
+    if(env.getUrl(num:num)==url) return;
+    env.setUrl(num:num, url:url);
+    String name = 'url' + num.toString();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(name, url);
+    this.notifyListeners();
+  }
+
+  Future saveKey(int num, String key) async {
+    if(num<1 && 4<num) return;
+    if(env.getKey(num:num)==key) return;
+    env.setKey(num:num, key:key);
+    String name = 'key' + num.toString();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(name, key);
+    this.notifyListeners();
   }
 }
