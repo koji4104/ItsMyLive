@@ -1,7 +1,5 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'settings_screen.dart';
-import 'package:flutter/services.dart';
 
 import 'package:native_device_orientation/native_device_orientation.dart';
 import 'dart:math';
@@ -26,15 +24,15 @@ import 'package:haishin_kit/video_source.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 bool disableCamera = kIsWeb; // true=test
+bool testMode = false;
 
 final cameraScreenProvider = ChangeNotifierProvider((ref) => ChangeNotifier());
 class CameraScreen extends ConsumerWidget {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  bool _isRunning = false;
   bool _isSaver = false;
-  bool _isConnecting = false;
-  DateTime? _startTime;
+  StatusData _status = StatusData();
+  String _state2String = '';
 
   Timer? _timer;
   Environment _env = Environment();
@@ -46,9 +44,8 @@ class CameraScreen extends ConsumerWidget {
   bool _bInit = false;
   late WidgetRef _ref;
   late BuildContext _context;
-  AppLifecycleState? _state;
+  AppLifecycleState? _appstate;
   MyEdge _edge = MyEdge(provider:cameraScreenProvider);
-
   RunningStateScreen _RunningState = RunningStateScreen();
 
   RtmpConnection? _connection;
@@ -71,21 +68,19 @@ class CameraScreen extends ConsumerWidget {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    //setState(() { _state = state; });
+    //setState(() { _appstate = state; });
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    Future.delayed(Duration.zero, () => init(context,ref));
+    ref.watch(cameraScreenProvider);
     this._ref = ref;
     this._context = context;
     this._env = ref.watch(environmentProvider).env;
-    Future.delayed(Duration.zero, () => init(context,ref));
-    ref.watch(cameraScreenProvider);
-
     this._isSaver = ref.watch(isSaverProvider);
-    this._isRunning = ref.watch(isRunningProvider);
-    this._startTime = ref.watch(startTimeProvider);
-    _edge.getEdge(context,ref);
+    this._status = ref.watch(statusProvider).statsu;
+    this._edge.getEdge(context,ref);
 
     return Scaffold(
       key: _scaffoldKey,
@@ -112,11 +107,11 @@ class CameraScreen extends ConsumerWidget {
         // Start
         //if (_isSaver==false)
           MyButton(
-            bottom: 30.0, left:0, right:0,
+            top:0.0, bottom: 0.0, right:30,
             icon: Icon(Icons.lens_rounded,
-            color: _isConnecting ? Colors.blueAccent : _isRunning ? Colors.redAccent : Colors.white),
+            color: _status.state==2 ? Colors.blueAccent : _status.state==1 ? Colors.redAccent : Colors.white),
             onPressed:(){
-              _isRunning ? onStop() : onStart();
+              _status.state==0 ? onStart() : onStop();
             },
           ),
 
@@ -167,6 +162,23 @@ class CameraScreen extends ConsumerWidget {
             )
           ),
 
+        // State2
+        //if(_isSaver==false)
+          Positioned(
+              bottom:40, left:_edge.width/2-80, right:_edge.width/2-80,
+              child:Container(
+                padding: EdgeInsets.fromLTRB(10,8,10,8),
+                decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(_state2String,
+                    textAlign:TextAlign.center,
+                    style: TextStyle(fontSize:16, color: Colors.white)
+                ),
+              )
+          ),
+
           // saver
           MyButton(
               bottom: 30.0, left: 30.0,
@@ -200,23 +212,40 @@ class CameraScreen extends ConsumerWidget {
 
     _connection = await RtmpConnection.create();
     if(_connection!=null) {
-
       _connection!.eventChannel.receiveBroadcastStream().listen((event) {
-        MyLog.info('connection=${event["data"]["code"]}');
+
+        String code = event["data"]["code"];
+        code = code.replaceAll('NetConnection.', '');
+        MyLog.info(code);
+        _state2String = code;
+        _ref.read(cameraScreenProvider).notifyListeners();
+
         switch (event["data"]["code"]) {
           case 'NetConnection.Connect.Success':
             _stream?.publish(_env.getKey()).then((_){
-              _ref.read(startTimeProvider.state).state = DateTime.now();
+              _ref.read(statusProvider).running();
             });
             break;
           case 'NetConnection.Connect.Closed':
+            if(_status.startTime != null){
+              _ref.read(statusProvider).retry();
+            }
             break;
+          case 'NetConnection.Connect.Failed':
+          case 'NetConnection.Call.BadVersion': break;
+          case 'NetConnection.Call.Failed': break;
+          case 'NetConnection.Call.Prohibited': break;
+          case 'NetConnection.Connect.AppShutdown': break;
+          case 'NetConnection.Connect.IdleTimeOut': break;
+          case 'NetConnection.Connect.InvalidApp': break;
+          case 'NetConnection.Connect.NetworkChange': break;
+          case 'NetConnection.Connect.Rejected': break;
         }
       });
 
       _stream = await RtmpStream.create(_connection!);
       if(_stream!=null) {
-        _stream!.audioSettings = AudioSettings(muted: false, bitrate: 128 * 1000);
+        _stream!.audioSettings = AudioSettings(muted:false, bitrate:128 * 1000);
         _stream!.videoSettings = VideoSettings(
           width: (_env.camera_height.val*16/9).toInt(),
           height: _env.camera_height.val,
@@ -224,17 +253,9 @@ class CameraScreen extends ConsumerWidget {
         );
         _stream!.attachAudio(AudioSource());
         _stream!.attachVideo(VideoSource(position:_env.camera_pos.val==0 ? CameraPosition.back : CameraPosition.front));
-
         _stream!.eventChannel.receiveBroadcastStream().listen((event) {
-          MyLog.info('stream=${event["data"]["code"]}');
-          switch (event["data"]["code"]) {
-            case 'NetConnection.Connect.Success':
-              break;
-            case 'NetConnection.Connect.Closed':
-              break;
-          }
+          MyLog.info(event["data"]["code"]);
         });
-
         _ref.read(cameraScreenProvider).notifyListeners();
       }
     }
@@ -242,12 +263,6 @@ class CameraScreen extends ConsumerWidget {
 
   /// cameraWidget
   Widget _cameraWidget(BuildContext context) {
-    if(disableCamera || _stream == null) {
-      return Positioned(
-        left:0, top:0, right:0, bottom:0,
-        child: Container(color: Color(0xFF444444)));
-    }
-
     Size _screenSize = MediaQuery.of(context).size;
     Size _cameraSize = Size(1920,1080);
     double sw = _screenSize.width;
@@ -264,6 +279,24 @@ class CameraScreen extends ConsumerWidget {
         ' camera=${_cameraSize.width.toInt()}x${_cameraSize.height.toInt()}'
         ' aspect=${_aspect.toStringAsFixed(2)}'
         ' scale=${_scale.toStringAsFixed(2)}');
+
+    if(testMode){
+      return Center(
+        child: Transform.scale(
+          scale: _scale,
+          child: AspectRatio(
+              aspectRatio: _aspect,
+              child: Image.network('/lib/assets/test.png', fit:BoxFit.cover)
+          ),
+        ),
+      );
+    }
+
+    if(disableCamera || _stream == null) {
+      return Positioned(
+          left:0, top:0, right:0, bottom:0,
+          child: Container(color: Color(0xFF444444)));
+    }
 
     return Center(
       child: Transform.scale(
@@ -282,8 +315,7 @@ class CameraScreen extends ConsumerWidget {
   Future<void> _onCameraSwitch(WidgetRef ref) async {
     if(_stream!=null) {
       int pos = _env.camera_pos.val==0 ? 1 : 0;
-      _env.camera_pos.set(pos);
-      _env.save(_env.camera_pos);
+      ref.read(environmentProvider).saveData(_env.camera_pos,pos);
       _stream!.attachVideo(VideoSource(position:pos==0 ? CameraPosition.back : CameraPosition.front));
     }
   }
@@ -291,9 +323,8 @@ class CameraScreen extends ConsumerWidget {
   /// onStart
   Future<bool> onStart() async {
     if(kIsWeb) {
-      _ref.read(startTimeProvider.state).state = DateTime.now();
       _batteryLevelStart = await _battery.batteryLevel;
-      _ref.read(isRunningProvider.state).state = true;
+      _ref.read(statusProvider).connecting();
     }
 
     if (_env.getUrl() == '') {
@@ -306,13 +337,15 @@ class CameraScreen extends ConsumerWidget {
       return false;
     }
 
+    //_ref.read(retryProvider.state).state = 0;
+
     try {
       _connection!.connect(_env.getUrl());
       _batteryLevelStart = await _battery.batteryLevel;
-      _ref.read(isRunningProvider.state).state = true;
+      _ref.read(statusProvider).connecting();
       MyLog.info("Start " + _env.getUrl());
     } catch (e) {
-      await MyLog.err('${e.toString()}');
+      MyLog.err('${e.toString()}');
     }
     return true;
   }
@@ -321,20 +354,19 @@ class CameraScreen extends ConsumerWidget {
   Future<void> onStop() async {
     print('-- onStop');
     try {
-      if(_startTime!=null) {
+      if(_status.startTime!=null) {
         String log = 'Stop';
-        Duration dur = DateTime.now().difference(_startTime!);
+        Duration dur = DateTime.now().difference(_status.startTime!);
         if(dur.inMinutes>0)
           log += ' ' + dur.inMinutes.toString() + 'min';
         await MyLog.info(log);
       }
 
-      if(_batteryLevelStart>0 && (_batteryLevelStart-_batteryLevel)>0) {
+      this._batteryLevel = await _battery.batteryLevel;
+      if(_batteryLevelStart>0 && _batteryLevel>0 && (_batteryLevelStart-_batteryLevel)>0) {
         await MyLog.info("Battery ${_batteryLevelStart}->${_batteryLevel}%");
       }
-
-      _ref.read(startTimeProvider.state).state = null;
-      _ref.read(isRunningProvider.state).state = false;
+      _ref.read(statusProvider).stop();
 
       if(_connection!=null && _stream!=null)
         _connection!.close();
@@ -348,27 +380,39 @@ class CameraScreen extends ConsumerWidget {
   void _onTimer(Timer timer) async {
     if(kIsWeb) return;
 
-    if(_startTime == null) {
-      return;
+    //1024000 com.haishinkit.eventchannel/258456858 com.haishinkit.eventchannel/115712075
+    //print('-- ${_stream!.videoSettings.bitrate} ${_connection!.eventChannel.name} ${_stream!.eventChannel.name}');
+
+    // connect closed after publish
+    if(_status.connectTime!=null && _status.startTime!=null && _status.retry>=1) {
+      Duration dur = DateTime.now().difference(_status.connectTime!);
+      if(dur.inSeconds>=10){
+        _connection!.connect(_env.getUrl());
+        _ref.read(statusProvider).retry();
+        MyLog.info("Connection retry ${_status.retry}");
+      }
     }
 
-    Duration dur = DateTime.now().difference(_startTime!);
-
-    if(_startTime!=null && _connection!=null) {
-      print('-- channel=${_connection!.eventChannel.name} ${_stream!.eventChannel.name}');
+    // first connect timeout
+    if(_status.connectTime!=null && _status.startTime==null && _status.state==2 && _status.retry==0){
+      Duration dur = DateTime.now().difference(_status.connectTime!);
+      if(dur.inSeconds>=30){
+        onStop();
+      }
     }
 
     // Autostop
-    if(_isRunning==true && _startTime!=null) {
+    if(_status.state==1 && _status.startTime!=null) {
+      Duration dur = DateTime.now().difference(_status.startTime!);
       if (_env.autostop_sec.val > 0 && dur.inSeconds>_env.autostop_sec.val) {
-        await MyLog.info("Autostop");
+        MyLog.info("Autostop");
         onStop();
         return;
       }
     }
 
     // check battery (every 1min)
-    if(_isRunning==true && DateTime.now().second == 0) {
+    if(_status.state==1 && DateTime.now().second == 0) {
       this._batteryLevel = await _battery.batteryLevel;
       if (this._batteryLevel < 10) {
         await MyLog.warn("Low battery");
@@ -377,9 +421,9 @@ class CameraScreen extends ConsumerWidget {
       }
     }
 
-    if(_isRunning==true && _state!=null) {
-      if (_state == AppLifecycleState.inactive ||
-          _state == AppLifecycleState.detached) {
+    if(_status.state==1 && _appstate!=null) {
+      if (_appstate == AppLifecycleState.inactive ||
+          _appstate == AppLifecycleState.detached) {
         await MyLog.warn("App is stop or background");
         onStop();
         return;
@@ -418,20 +462,29 @@ final runningStateProvider = ChangeNotifierProvider((ref) => ChangeNotifier());
 class RunningStateScreen extends ConsumerWidget {
   Timer? _timer;
   late WidgetRef _ref;
-  bool _isRunning = false;
-  DateTime? _startTime;
+  StatusData _status = StatusData();
   String _stateString = '';
+  bool _bInit = false;
+  RunningStateScreen(){}
 
-  RunningStateScreen(){
-    _timer = Timer.periodic(Duration(seconds:1), _onTimer);
+  void init(BuildContext context, WidgetRef ref) {
+    if(_bInit == false){
+      _bInit = true;
+      _timer = Timer.periodic(Duration(seconds:1), _onTimer);
+    }
+  }
+
+  @override
+  void dispose() {
+    if(_timer!=null) _timer!.cancel();
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     this._ref = ref;
-    this._isRunning = ref.watch(isRunningProvider);
-    this._startTime = ref.watch(startTimeProvider);
+    this._status = ref.watch(statusProvider).statsu;
     _ref.watch(runningStateProvider);
+    Future.delayed(Duration.zero, () => init(context,ref));
 
     return Text(_stateString,
         textAlign:TextAlign.center,
@@ -441,13 +494,17 @@ class RunningStateScreen extends ConsumerWidget {
 
   void _onTimer(Timer timer) async {
     String str = 'Stop';
-    if(_isRunning==true) {
-      if (_startTime == null) {
+    if(_status.state==2){
+      if(_status.retry>0)
+        str = 'Retry${_status.retry}';
+      else
         str = 'Connecting';
-      } else {
-        Duration dur = DateTime.now().difference(_startTime!);
-        str = dur2str(dur);
-      }
+      Duration dur = DateTime.now().difference(_status.connectTime!);
+      if(dur.inSeconds>0)
+        str += ' ${dur.inSeconds}s';
+    } else if(_status.state==1){
+      Duration dur = DateTime.now().difference(_status.startTime!);
+      str = dur2str(dur);
     }
     if(_stateString!=str){
       _stateString = str;

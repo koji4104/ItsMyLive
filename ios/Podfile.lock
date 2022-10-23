@@ -11,7 +11,7 @@ PODS:
     - HaishinKit (= 1.2.7)
   - HaishinKit (1.2.7):
     - Logboard (~> 2.2.2)
-  - Logboard (2.2.2)
+  - Logboard (2.2.4)
   - native_device_orientation (0.0.1):
     - Flutter
   - path_provider_ios (0.0.1):
@@ -61,15 +61,15 @@ SPEC CHECKSUMS:
   audio_session: 4f3e461722055d21515cf3261b64c973c062f345
   battery_plus: 7851ab482c336dd101ae735dc9363f01e1223c7c
   camera_avfoundation: 07c77549ea54ad95d8581be86617c094a46280d9
-  Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
+  Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
   haishin_kit: 965812b9afa05a41ec4a98b39fab2eb491056fe4
   HaishinKit: 5463efd52fa4de2018db95547a5b09ce50495444
-  Logboard: 0ab6bbd984ed032b3f0b615cef06779a73445c80
+  Logboard: 660364cbd45aa42fd79637f0cdfba3c950c613d8
   native_device_orientation: 3b4cfc9565a7b879cc4fde282b3e27745e852d0d
   path_provider_ios: 14f3d2fd28c4fdb42f44e0f751d12861c43cee02
   permission_handler_apple: 44366e37eaf29454a1e7b1b7d736c2cceaeb17ce
   shared_preferences_ios: 548a61f8053b9b8a49ac19c1ffbc8b92c50d68ad
 
-PODFILE CHECKSUM: aafe91acc616949ddb318b77800a7f51bffa2a4c
+PODFILE CHECKSUM: c2b7d76124192629287fe4c568f26453c4fcfb59
 
 COCOAPODS: 1.11.3

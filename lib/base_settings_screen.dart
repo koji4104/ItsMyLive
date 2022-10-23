@@ -18,16 +18,16 @@ class BaseSettingsScreen extends ConsumerWidget {
   TextStyle tsNg = TextStyle(color:Colors.grey);
 
   Color btnTextColor = Color(0xFFFFFFFF);
-  Color btnTileColor = Color(0xFF404040);
+  Color btnTileColor = Color(0xFF505050);
   Color btnOkTextColor = Color(0xFFFFFFFF);
   Color btnOkTileColor = Color(0xFF808080);
 
   Color textColor = Color(0xFFa0a0a0);
-  Color tileColor = Color(0xFF404040);
+  Color tileColor = Color(0xFF505050);
   Color selectedTextColor = Color(0xFFFFFFFF);
-  Color selectedTileColor = Color(0xFF404040);
+  Color selectedTileColor = Color(0xFF505050);
   Color activeColor = Color(0xFFFFFFFF); // radio button
-  Color hoverColor = Color(0xFF505050);
+  Color hoverColor = Color(0xFF606060);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

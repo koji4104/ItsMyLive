@@ -34,7 +34,7 @@ class SettingsScreen extends BaseSettingsScreen {
       padding: EdgeInsets.fromLTRB(8,8,8,8),
       child: Column(children: [
         MyListTile(
-          title:Text(''),
+          title: env.getUrl()=='' ? Text('URL') : Text(''),
           title2:Text(env.getUrl()),
           onTap:(){
             NavigatorPush(SelectUrlScreen());
@@ -42,7 +42,7 @@ class SettingsScreen extends BaseSettingsScreen {
         ),
         MyValue(data: env.camera_height),
         MyValue(data: env.video_kbps),
-        MyValue(data: env.video_fps),
+        //MyValue(data: env.video_fps),
         MyValue(data: env.autostop_sec),
         MyLabel(''),
         MyListTile(
@@ -192,14 +192,15 @@ class EditUrlScreen extends BaseSettingsScreen {
   // num=1-4
   EditUrlScreen(int num){
     this.num = num;
-    _url = _urlOld = this.env.getUrl(num:this.num);
-    _key = _urlOld = this.env.getKey(num:this.num);
-    _urlController = TextEditingController(text:_url);
-    _keyController = TextEditingController(text:_key);
   }
 
   @override
   Future init() async {
+    _url = _urlOld = this.env.getUrl(num:this.num);
+    _key = _keyOld = this.env.getKey(num:this.num);
+    _urlController = TextEditingController(text:_url);
+    _keyController = TextEditingController(text:_key);
+    redraw();
   }
 
   @override

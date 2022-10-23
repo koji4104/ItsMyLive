@@ -3,10 +3,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'localizations.dart';
-import 'log_screen.dart';
-import 'common.dart';
-
 class EnvData {
   int val;
   String key = '';
@@ -19,24 +15,6 @@ class EnvData {
     required List<int> this.vals,
     required List<String> this.keys,
     required String this.name}){
-    set(val);
-  }
-
-  // 選択肢と同じものがなければひとつ大きいいものになる
-  set(int? newval) {
-    if (newval==null)
-      return;
-    if (vals.length > 0) {
-      val = vals[0];
-      for (var i=0; i<vals.length; i++) {
-        if (newval <= vals[i]) {
-          val = vals[i];
-          if(keys.length>=i)
-            key = keys[i];
-          break;
-        }
-      }
-    }
   }
 }
 
@@ -52,8 +30,8 @@ class Environment {
 
   EnvData autostop_sec = EnvData(
     val:3600,
-    vals:[60,3600,7200,10800,14400,21600],
-    keys:['60 sec','1','2','3','4','6'],
+    vals:[0,3600,7200,10800,14400,21600],
+    keys:['Nonstop','1 hour','2 hour','3 hour','4 hour','6 hour'],
     name:'autostop_sec',
   );
 
@@ -67,7 +45,7 @@ class Environment {
   EnvData video_kbps = EnvData(
     val:1000,
     vals:[500,1000,2000,4000,8000],
-    keys:['500 kbps','1000 kbps','2000 kbps','4000 kbps','8000 kbps'],
+    keys:['500 kbps','1 mbps','2 mbps','4 mbps','8 mbps'],
     name:'video_kbps',
   );
 
@@ -93,13 +71,13 @@ class Environment {
     name:'url_num',
   );
 
-  String url1 = 'rtmp://';
+  String url1 = '';
   String key1 = '';
-  String url2 = 'rtmp://';
+  String url2 = '';
   String key2 = '';
-  String url3 = 'rtmp://';
+  String url3 = '';
   String key3 = '';
-  String url4 = 'rtmp://';
+  String url4 = '';
   String key4 = '';
 
   String getUrl({int? num}){
@@ -143,57 +121,6 @@ class Environment {
       case 4: key4 = key; break;
     }
   }
-
-  Future load() async {
-    //if(kIsWeb) return;
-    print('-- Environment.load()');
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      _loadSub(prefs, url_num);
-      _loadSub(prefs, video_fps);
-      _loadSub(prefs, video_kbps);
-      _loadSub(prefs, autostop_sec);
-      _loadSub(prefs, camera_height);
-      _loadSub(prefs, camera_pos);
-      _loadSub(prefs, publish_mode);
-
-      url1 = prefs.getString('url1') ?? '';
-      key1 = prefs.getString('key1') ?? '';
-      url2 = prefs.getString('url2') ?? '';
-      key2 = prefs.getString('key2') ?? '';
-      url3 = prefs.getString('url3') ?? '';
-      key3 = prefs.getString('key3') ?? '';
-      url4 = prefs.getString('url4') ?? '';
-      key4 = prefs.getString('key4') ?? '';
-    } on Exception catch (e) {
-      print('-- load() e=' + e.toString());
-    }
-  }
-  _loadSub(SharedPreferences prefs, EnvData data) {
-    data.set(prefs.getInt(data.name) ?? data.val);
-  }
-
-  Future save(EnvData data) async {
-    //if(kIsWeb) return;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(data.name, data.val);
-  }
-
-  Future saveUrl(String url, int num) async {
-    //if(kIsWeb) return;
-    if(num<1 && 4<num) return;
-    String name = 'url' + num.toString();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(name, url);
-  }
-
-  Future saveKey(String key, int num) async {
-    //if(kIsWeb) return;
-    if(num<1 && 4<num) return;
-    String name = 'key' + num.toString();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(name, key);
-  }
 }
 
 final environmentProvider = ChangeNotifierProvider((ref) => environmentNotifier(ref));
@@ -201,9 +128,37 @@ class environmentNotifier extends ChangeNotifier {
   Environment env = Environment();
 
   environmentNotifier(ref){
-    env.load().then((_){
+    load().then((_){
       this.notifyListeners();
     });
+  }
+
+  Future load() async {
+    print('-- Environment.load()');
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      _loadSub(prefs, env.url_num);
+      _loadSub(prefs, env.video_fps);
+      _loadSub(prefs, env.video_kbps);
+      _loadSub(prefs, env.autostop_sec);
+      _loadSub(prefs, env.camera_height);
+      _loadSub(prefs, env.camera_pos);
+      _loadSub(prefs, env.publish_mode);
+
+      env.url1 = prefs.getString('url1') ?? '';
+      env.key1 = prefs.getString('key1') ?? '';
+      env.url2 = prefs.getString('url2') ?? '';
+      env.key2 = prefs.getString('key2') ?? '';
+      env.url3 = prefs.getString('url3') ?? '';
+      env.key3 = prefs.getString('key3') ?? '';
+      env.url4 = prefs.getString('url4') ?? '';
+      env.key4 = prefs.getString('key4') ?? '';
+    } on Exception catch (e) {
+      print('-- load() e=' + e.toString());
+    }
+  }
+  _loadSub(SharedPreferences prefs, EnvData data) {
+    data.val = prefs.getInt(data.name) ?? data.val;
   }
 
   Future saveData(EnvData data, int newVal) async {
@@ -215,7 +170,7 @@ class environmentNotifier extends ChangeNotifier {
     this.notifyListeners();
   }
 
-  roundVal(EnvData data, int newVal){
+  void roundVal(EnvData data, int newVal){
     for (var i=0; i<data.vals.length; i++){
       if (newVal <= data.vals[i]){
         getData(data).val = data.vals[i];
