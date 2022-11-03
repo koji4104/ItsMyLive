@@ -119,7 +119,7 @@ class CameraScreen extends ConsumerWidget {
         if(_isSaver==false)
           MyButton(
             bottom: 30.0, right: 30.0,
-            icon: Icon(Icons.flip_camera_ios, color: Colors.white),
+            icon: Icon(Icons.autorenew, color: Colors.white),
             onPressed:() => _onCameraSwitch(ref),
           ),
 
@@ -488,7 +488,7 @@ class RunningStateScreen extends ConsumerWidget {
 
     return Text(_stateString,
         textAlign:TextAlign.center,
-        style: TextStyle(fontSize:16, color: Colors.white)
+        style: TextStyle(fontSize:14, color: Colors.white)
     );
   }
 

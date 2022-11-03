@@ -44,49 +44,44 @@ class MyEdge {
   static double leftMargin = 200.0; // タブレット時の左マージン
 
   ProviderBase? _provider;
-  double width = 0;
+  double width = 100;
 
   /// Edgeを取得
   /// 各スクリーンのbuild()内で呼び出す
   void getEdge(BuildContext context, WidgetRef ref) async {
-    try {
-      if (width == MediaQuery.of(context).size.width)
-        return;
-      width = MediaQuery.of(context).size.width;
-      print('-- getEdge() width=${width.toInt()}');
+    if (width == MediaQuery.of(context).size.width)
+      return;
+    width = MediaQuery.of(context).size.width;
+    print('-- getEdge() width=${width.toInt()}');
 
-      /*
-      if (!kIsWeb && Platform.isAndroid) {
-        print('-- isAndroid');
-        NativeDeviceOrientation ori = await NativeDeviceOrientationCommunicator().orientation();
-        switch (ori) {
-          case NativeDeviceOrientation.landscapeRight:
-            homebarEdge = EdgeInsets.only(left: homebarWidth);
-            print('-- droid landscapeRight');
-            break;
-          case NativeDeviceOrientation.landscapeLeft:
-            homebarEdge = EdgeInsets.only(right: homebarWidth);
-            break;
-          case NativeDeviceOrientation.portraitDown:
-          case NativeDeviceOrientation.portraitUp:
-            homebarEdge = EdgeInsets.only(bottom: homebarWidth);
-            break;
-          default:
-            break;
-        }
+    if (!kIsWeb && Platform.isAndroid) {
+      print('-- isAndroid');
+      NativeDeviceOrientation ori = await NativeDeviceOrientationCommunicator().orientation();
+      switch (ori) {
+        case NativeDeviceOrientation.landscapeRight:
+          homebarEdge = EdgeInsets.only(left: homebarWidth);
+          print('-- droid landscapeRight');
+          break;
+        case NativeDeviceOrientation.landscapeLeft:
+          homebarEdge = EdgeInsets.only(right: homebarWidth);
+          break;
+        case NativeDeviceOrientation.portraitDown:
+        case NativeDeviceOrientation.portraitUp:
+          homebarEdge = EdgeInsets.only(bottom: homebarWidth);
+          break;
+        default:
+          break;
       }
-      */
-      EdgeInsetsGeometry leftEdge = EdgeInsets.all(0.0);
-      if (MediaQuery.of(context).size.width > 700) {
-        leftEdge = EdgeInsets.only(left: leftMargin);
-      }
-      this.settingsEdge = EdgeInsets.all(margin);
-      this.settingsEdge = this.settingsEdge.add(leftEdge);
-      this.settingsEdge = this.settingsEdge.add(homebarEdge);
-      if(_provider!=null)
-        ref.read(_provider!).notifyListeners();
-    } catch (e) {
-      print('-- ${e.toString()}');
     }
+
+    EdgeInsetsGeometry leftrightEdge = EdgeInsets.all(0.0);
+    if (width > 700) {
+      leftrightEdge = EdgeInsets.only(left:width*10.0/100.0,right:width*10.0/100.0);
+    }
+    this.settingsEdge = EdgeInsets.all(margin);
+    this.settingsEdge = this.settingsEdge.add(leftrightEdge);
+    this.settingsEdge = this.settingsEdge.add(homebarEdge);
+    if(_provider!=null)
+      ref.read(_provider!).notifyListeners();
   }
 }

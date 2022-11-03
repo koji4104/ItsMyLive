@@ -64,8 +64,8 @@ class MyLog {
     String u = 'user';
     
     final Directory appdir = await getApplicationDocumentsDirectory();
-    await Directory('${appdir.path}/log').create(recursive: true);
-    final String path = '${appdir.path}/log/$_fname';
+    await Directory('${appdir.path}/logs').create(recursive: true);
+    final String path = '${appdir.path}/logs/$_fname';
     
     // length byte 100kb
     if(await File(path).exists() && File(path).lengthSync()>100*1024) {
@@ -86,7 +86,7 @@ class MyLog {
         txt = sample;
       } else {
         final Directory appdir = await getApplicationDocumentsDirectory();
-        final String path = '${appdir.path}/log/$_fname';
+        final String path = '${appdir.path}/logs/$_fname';
         if (await File(path + '.1').exists()) {
           txt += await File(path + '.1').readAsString();
         }
@@ -148,8 +148,9 @@ class LogScreen extends ConsumerWidget {
     TextStyle tsWarn = TextStyle(color:Color(0xFFeeee44));
     TextStyle tsTime = TextStyle(color:Color(0xFFcccccc));
 
+    String format = MediaQuery.of(context).size.width > 500 ? "yyyy-MM-dd HH:mm" : "MM-dd HH:mm";
     for(MyLogData d in list) {
-      String stime = DateFormat("yyyy-MM-dd HH:mm").format(DateTime.parse(d.time));
+      String stime = DateFormat(format).format(DateTime.parse(d.time));
       Wrap w = Wrap(children:[getText(stime),getText(d.msg)]);
       spans.add(TextSpan(text:stime, style:tsTime));
       if (d.level.contains('err'))
@@ -163,7 +164,7 @@ class LogScreen extends ConsumerWidget {
       width: MediaQuery.of(context).size.width-20,
       height: MediaQuery.of(context).size.height-120,
         decoration: BoxDecoration(
-          color: Color(0xFF333333),
+          color: Color(0xFF404040),
           borderRadius: BorderRadius.circular(4),
         ),
       child: SingleChildScrollView(
