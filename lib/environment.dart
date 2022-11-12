@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'constants.dart';
 
 class EnvData {
   int val;
@@ -29,9 +30,13 @@ class Environment {
   );
 
   EnvData autostop_sec = EnvData(
-    val:3600,
-    vals:[0,3600,7200,10800,14400,21600],
-    keys:['Nonstop','1 hour','2 hour','3 hour','4 hour','6 hour'],
+    val:0,
+    vals:IS_TEST?
+         [0,120,3600,7200,10800,14400,21600]:
+         [0,3600,7200,10800,14400,21600],
+    keys:IS_TEST?
+         ['Nonstop','2 min','1 hour','2 hour','3 hour','4 hour','6 hour']:
+         ['Nonstop','1 hour','2 hour','3 hour','4 hour','6 hour'],
     name:'autostop_sec',
   );
 

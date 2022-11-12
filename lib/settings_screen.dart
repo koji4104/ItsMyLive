@@ -34,7 +34,7 @@ class SettingsScreen extends BaseSettingsScreen {
       padding: EdgeInsets.fromLTRB(8,8,8,8),
       child: Column(children: [
         MyListTile(
-          title: env.getUrl()=='' ? Text('URL') : Text(''),
+          title: env.getUrl()=='' ? MyText('URL') : MyText(''),
           title2:Text(env.getUrl()),
           onTap:(){
             NavigatorPush(SelectUrlScreen());
@@ -46,10 +46,14 @@ class SettingsScreen extends BaseSettingsScreen {
         MyValue(data: env.autostop_sec),
         MyLabel(''),
         MyListTile(
-          title:Text('Logs'),
-          onTap:(){
-            NavigatorPush(LogScreen());
-          }
+            title:MyText('Logs'),
+            onTap:(){
+              Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => LogScreen(),
+                  )
+              );
+            }
         ),
       ])
     );

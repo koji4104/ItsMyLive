@@ -10,6 +10,7 @@ class StatusData {
   int retry = 0;
   DateTime? startTime;
   DateTime? connectTime;
+  bool isSaver = false;
 }
 
 final statusProvider = ChangeNotifierProvider((ref) => statusNotifier(ref));
@@ -43,6 +44,10 @@ class statusNotifier extends ChangeNotifier {
     statsu.retry += 1;
     //statsu.startTime = statsu.startTime;
     statsu.connectTime = DateTime.now();
+    this.notifyListeners();
+  }
+  SwitchSaver() {
+    statsu.isSaver = !statsu.isSaver;
     this.notifyListeners();
   }
 }

@@ -30,13 +30,11 @@ final cameraScreenProvider = ChangeNotifierProvider((ref) => ChangeNotifier());
 class CameraScreen extends ConsumerWidget {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  bool _isSaver = false;
   StatusData _status = StatusData();
   String _state2String = '';
 
   Timer? _timer;
   Environment _env = Environment();
-
   final Battery _battery = Battery();
   int _batteryLevel = -1;
   int _batteryLevelStart = -1;
@@ -44,7 +42,6 @@ class CameraScreen extends ConsumerWidget {
   bool _bInit = false;
   late WidgetRef _ref;
   late BuildContext _context;
-  AppLifecycleState? _appstate;
   MyEdge _edge = MyEdge(provider:cameraScreenProvider);
   RunningStateScreen _RunningState = RunningStateScreen();
 
@@ -68,7 +65,20 @@ class CameraScreen extends ConsumerWidget {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    //setState(() { _appstate = state; });
+    switch (state) {
+      case AppLifecycleState.inactive: print('-- inactive'); break;
+      case AppLifecycleState.paused: print('-- paused'); break;
+      case AppLifecycleState.resumed: print('-- resumed'); break;
+      case AppLifecycleState.detached: print('-- detached'); break;
+    }
+    if(state!=null) {
+      if (state == AppLifecycleState.inactive ||
+          state == AppLifecycleState.paused ||
+          state == AppLifecycleState.detached) {
+        MyLog.warn("App stopped or background");
+        onStop();
+      }
+    }
   }
 
   @override
@@ -78,9 +88,9 @@ class CameraScreen extends ConsumerWidget {
     this._ref = ref;
     this._context = context;
     this._env = ref.watch(environmentProvider).env;
-    this._isSaver = ref.watch(isSaverProvider);
     this._status = ref.watch(statusProvider).statsu;
     this._edge.getEdge(context,ref);
+    bool _isSaver = _status.isSaver;
 
     return Scaffold(
       key: _scaffoldKey,
@@ -170,7 +180,7 @@ class CameraScreen extends ConsumerWidget {
                 padding: EdgeInsets.fromLTRB(10,8,10,8),
                 decoration: BoxDecoration(
                     color: Colors.black54,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(30),
                 ),
                 child: Text(_state2String,
                     textAlign:TextAlign.center,
@@ -184,7 +194,7 @@ class CameraScreen extends ConsumerWidget {
               bottom: 30.0, left: 30.0,
               icon: Icon(Icons.dark_mode, color:Colors.white),
               onPressed:() {
-                _ref.read(isSaverProvider.state).state = !_isSaver;
+                _ref.read(statusProvider).SwitchSaver();
               }
           ),
         ]
@@ -213,7 +223,6 @@ class CameraScreen extends ConsumerWidget {
     _connection = await RtmpConnection.create();
     if(_connection!=null) {
       _connection!.eventChannel.receiveBroadcastStream().listen((event) {
-
         String code = event["data"]["code"];
         code = code.replaceAll('NetConnection.', '');
         MyLog.info(code);
@@ -272,7 +281,7 @@ class CameraScreen extends ConsumerWidget {
     double _aspect = sw>sh ? 16.0/9.0 : 9.0/16.0;
 
     // 16:10 (Up-down black) or 17:9 (Left-right black)
-    //double _scale = dw/dh < 16.0/9.0 ? dh/dw * 16.0/9.0 : dw/dh * 9.0/16.0;
+    // e.g. double _scale = dw/dh < 16.0/9.0 ? dh/dw * 16.0/9.0 : dw/dh * 9.0/16.0;
     double _scale = dw/dh < _cameraSize.width/_cameraSize.height ? dh/dw * _cameraSize.width/_cameraSize.height : dw/dh * _cameraSize.height/_cameraSize.width;
 
     print('-- screen=${sw.toInt()}x${sh.toInt()}'
@@ -354,18 +363,16 @@ class CameraScreen extends ConsumerWidget {
   Future<void> onStop() async {
     print('-- onStop');
     try {
+      String s = 'Stop';
       if(_status.startTime!=null) {
-        String log = 'Stop';
         Duration dur = DateTime.now().difference(_status.startTime!);
         if(dur.inMinutes>0)
-          log += ' ' + dur.inMinutes.toString() + 'min';
-        await MyLog.info(log);
+          s += ' ${dur.inMinutes}min';
       }
-
-      this._batteryLevel = await _battery.batteryLevel;
-      if(_batteryLevelStart>0 && _batteryLevel>0 && (_batteryLevelStart-_batteryLevel)>0) {
-        await MyLog.info("Battery ${_batteryLevelStart}->${_batteryLevel}%");
+      if(_batteryLevelStart-_batteryLevel>0) {
+        s += ' batt ${_batteryLevelStart}->${_batteryLevel}%';
       }
+      MyLog.info(s);
       _ref.read(statusProvider).stop();
 
       if(_connection!=null && _stream!=null)
@@ -379,9 +386,6 @@ class CameraScreen extends ConsumerWidget {
   /// Timer
   void _onTimer(Timer timer) async {
     if(kIsWeb) return;
-
-    //1024000 com.haishinkit.eventchannel/258456858 com.haishinkit.eventchannel/115712075
-    //print('-- ${_stream!.videoSettings.bitrate} ${_connection!.eventChannel.name} ${_stream!.eventChannel.name}');
 
     // connect closed after publish
     if(_status.connectTime!=null && _status.startTime!=null && _status.retry>=1) {
@@ -405,7 +409,7 @@ class CameraScreen extends ConsumerWidget {
     if(_status.state==1 && _status.startTime!=null) {
       Duration dur = DateTime.now().difference(_status.startTime!);
       if (_env.autostop_sec.val > 0 && dur.inSeconds>_env.autostop_sec.val) {
-        MyLog.info("Autostop");
+        MyLog.info("Autostop by settings");
         onStop();
         return;
       }
@@ -420,15 +424,6 @@ class CameraScreen extends ConsumerWidget {
         return;
       }
     }
-
-    if(_status.state==1 && _appstate!=null) {
-      if (_appstate == AppLifecycleState.inactive ||
-          _appstate == AppLifecycleState.detached) {
-        await MyLog.warn("App is stop or background");
-        onStop();
-        return;
-      }
-    }
   } // _onTimer
 
   void showSnackBar(String msg) {
@@ -437,9 +432,6 @@ class CameraScreen extends ConsumerWidget {
       ScaffoldMessenger.of(_context).showSnackBar(snackBar);
     }
   }
-
-  @override
-  bool get wantKeepAlive => true;
 
   Widget MyButton({required Icon icon, required void Function()? onPressed,
     double? left, double? top, double? right, double? bottom}) {
