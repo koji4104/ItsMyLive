@@ -6,7 +6,7 @@ PODS:
   - camera_avfoundation (0.0.1):
     - Flutter
   - Flutter (1.0.0)
-  - haishin_kit (0.9.1):
+  - haishin_kit (0.9.2):
     - Flutter
     - HaishinKit (= 1.2.7)
   - HaishinKit (1.2.7):
@@ -62,7 +62,7 @@ SPEC CHECKSUMS:
   battery_plus: 7851ab482c336dd101ae735dc9363f01e1223c7c
   camera_avfoundation: 07c77549ea54ad95d8581be86617c094a46280d9
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
-  haishin_kit: 965812b9afa05a41ec4a98b39fab2eb491056fe4
+  haishin_kit: d6f834fbfcb55d482ef4156855cc2410e3c13b1a
   HaishinKit: 5463efd52fa4de2018db95547a5b09ce50495444
   Logboard: 660364cbd45aa42fd79637f0cdfba3c950c613d8
   native_device_orientation: 3b4cfc9565a7b879cc4fde282b3e27745e852d0d

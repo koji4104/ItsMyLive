@@ -12,6 +12,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'log_screen.dart';
 import 'common.dart';
 import 'environment.dart';
+import 'constants.dart';
+import 'widgets.dart';
 
 import 'package:audio_session/audio_session.dart';
 import 'package:haishin_kit/audio_settings.dart';
@@ -24,7 +26,6 @@ import 'package:haishin_kit/video_source.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 bool disableCamera = kIsWeb; // true=test
-bool testMode = false;
 
 final cameraScreenProvider = ChangeNotifierProvider((ref) => ChangeNotifier());
 class CameraScreen extends ConsumerWidget {
@@ -116,7 +117,7 @@ class CameraScreen extends ConsumerWidget {
 
         // Start
         //if (_isSaver==false)
-          MyButton(
+          MyIconButton(
             top:0.0, bottom: 0.0, right:30,
             icon: Icon(Icons.lens_rounded,
             color: _status.state==2 ? Colors.blueAccent : _status.state==1 ? Colors.redAccent : Colors.white),
@@ -127,7 +128,7 @@ class CameraScreen extends ConsumerWidget {
 
         // Switch
         if(_isSaver==false)
-          MyButton(
+          MyIconButton(
             bottom: 30.0, right: 30.0,
             icon: Icon(Icons.autorenew, color: Colors.white),
             onPressed:() => _onCameraSwitch(ref),
@@ -135,7 +136,7 @@ class CameraScreen extends ConsumerWidget {
 
         // Settings
         if(_isSaver==false)
-          MyButton(
+          MyIconButton(
             top: 50.0, left: 30.0,
             icon: Icon(Icons.settings, color:Colors.white),
             onPressed:() async {
@@ -190,7 +191,7 @@ class CameraScreen extends ConsumerWidget {
           ),
 
           // saver
-          MyButton(
+          MyIconButton(
               bottom: 30.0, left: 30.0,
               icon: Icon(Icons.dark_mode, color:Colors.white),
               onPressed:() {
@@ -289,7 +290,8 @@ class CameraScreen extends ConsumerWidget {
         ' aspect=${_aspect.toStringAsFixed(2)}'
         ' scale=${_scale.toStringAsFixed(2)}');
 
-    if(testMode){
+    if(IS_TEST){
+      print('-- IS_TEST');
       return Center(
         child: Transform.scale(
           scale: _scale,
@@ -431,22 +433,6 @@ class CameraScreen extends ConsumerWidget {
       final snackBar = SnackBar(content: Text(msg));
       ScaffoldMessenger.of(_context).showSnackBar(snackBar);
     }
-  }
-
-  Widget MyButton({required Icon icon, required void Function()? onPressed,
-    double? left, double? top, double? right, double? bottom}) {
-    return Positioned(
-      left:left, top:top, right:right, bottom:bottom,
-      child: CircleAvatar(
-        backgroundColor: Colors.black54,
-        radius: 28.0,
-        child: IconButton(
-          icon: icon,
-          iconSize: 38.0,
-          onPressed: onPressed,
-        )
-      )
-    );
   }
 }
 

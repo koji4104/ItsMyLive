@@ -17,6 +17,23 @@ class EnvData {
     required List<String> this.keys,
     required String this.name}){
   }
+
+  // 選択肢と同じものがなければひとつ大きいいものになる
+  set(int? newval) {
+    if (newval==null)
+      return;
+    if (vals.length > 0) {
+      val = vals[0];
+      for (var i=0; i<vals.length; i++) {
+        if (newval <= vals[i]) {
+          val = vals[i];
+          if(keys.length>=i)
+            key = keys[i];
+          break;
+        }
+      }
+    }
+  }
 }
 
 /// Environment
@@ -126,6 +143,36 @@ class Environment {
       case 4: key4 = key; break;
     }
   }
+
+  Future load() async {
+    print('-- Environment.load()');
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      _loadSub(prefs, url_num);
+      _loadSub(prefs, video_fps);
+      _loadSub(prefs, video_kbps);
+      _loadSub(prefs, autostop_sec);
+      _loadSub(prefs, camera_height);
+      _loadSub(prefs, camera_pos);
+      _loadSub(prefs, publish_mode);
+
+      url1 = prefs.getString('url1') ?? '';
+      key1 = prefs.getString('key1') ?? '';
+      url2 = prefs.getString('url2') ?? '';
+      key2 = prefs.getString('key2') ?? '';
+      url3 = prefs.getString('url3') ?? '';
+      key3 = prefs.getString('key3') ?? '';
+      url4 = prefs.getString('url4') ?? '';
+      key4 = prefs.getString('key4') ?? '';
+      print('-- camera_height.val=${camera_height.val}');
+    } on Exception catch (e) {
+      print('-- load() e=' + e.toString());
+    }
+  }
+  _loadSub(SharedPreferences prefs, EnvData data) {
+    //data.val = prefs.getInt(data.name) ?? data.val;
+    data.set(prefs.getInt(data.name) ?? data.val);
+  }
 }
 
 final environmentProvider = ChangeNotifierProvider((ref) => environmentNotifier(ref));
@@ -133,37 +180,9 @@ class environmentNotifier extends ChangeNotifier {
   Environment env = Environment();
 
   environmentNotifier(ref){
-    load().then((_){
+    env.load().then((_){
       this.notifyListeners();
     });
-  }
-
-  Future load() async {
-    print('-- Environment.load()');
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      _loadSub(prefs, env.url_num);
-      _loadSub(prefs, env.video_fps);
-      _loadSub(prefs, env.video_kbps);
-      _loadSub(prefs, env.autostop_sec);
-      _loadSub(prefs, env.camera_height);
-      _loadSub(prefs, env.camera_pos);
-      _loadSub(prefs, env.publish_mode);
-
-      env.url1 = prefs.getString('url1') ?? '';
-      env.key1 = prefs.getString('key1') ?? '';
-      env.url2 = prefs.getString('url2') ?? '';
-      env.key2 = prefs.getString('key2') ?? '';
-      env.url3 = prefs.getString('url3') ?? '';
-      env.key3 = prefs.getString('key3') ?? '';
-      env.url4 = prefs.getString('url4') ?? '';
-      env.key4 = prefs.getString('key4') ?? '';
-    } on Exception catch (e) {
-      print('-- load() e=' + e.toString());
-    }
-  }
-  _loadSub(SharedPreferences prefs, EnvData data) {
-    data.val = prefs.getInt(data.name) ?? data.val;
   }
 
   Future saveData(EnvData data, int newVal) async {
@@ -190,13 +209,14 @@ class environmentNotifier extends ChangeNotifier {
   EnvData getData(EnvData data){
     EnvData ret = env.publish_mode;
     switch(data.name){
-      case 'url_num': ret = env.url_num; break;
       case 'video_fps': ret = env.video_fps; break;
       case 'video_kbps': ret = env.video_kbps; break;
       case 'autostop_sec': ret = env.autostop_sec; break;
       case 'camera_height': ret = env.camera_height; break;
       case 'camera_pos': ret = env.camera_pos; break;
       case 'publish_mode': ret = env.publish_mode; break;
+      case 'url_num': ret = env.url_num; break;
+      default: print('-- getData() no key name'); break;
     }
     return ret;
   }
