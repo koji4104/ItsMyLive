@@ -12,11 +12,11 @@ class BaseScreen extends ConsumerWidget {
   late WidgetRef ref;
   ChangeNotifierProvider baseProvider = ChangeNotifierProvider((ref) => ChangeNotifier());
   late MyEdge edge = MyEdge(provider:baseProvider);
+  Environment env = new Environment();
   bool bInit = false;
 
   @override
-  Future init() async {
-  }
+  Future init() async {}
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -26,11 +26,12 @@ class BaseScreen extends ConsumerWidget {
 
   @override
   void subBuild(BuildContext context, WidgetRef ref) {
+    ref.watch(baseProvider);
+    this.env = ref.watch(environmentProvider).env;
     this.context = context;
     this.ref = ref;
-    edge.getEdge(context,ref);
-    ref.watch(baseProvider);
-    if(bInit==false) {
+    edge.getEdge(context, ref);
+    if (bInit == false) {
       bInit = true;
       Future.delayed(Duration.zero, () => init());
     }
@@ -39,7 +40,7 @@ class BaseScreen extends ConsumerWidget {
   Future<int?> NavigatorPush(var screen) async {
     int? ret = await Navigator.of(context).push(
         MaterialPageRoute<int>(
-          builder: (context) => screen,
+            builder: (context) => screen,
         )
     );
     return ret;
@@ -61,7 +62,6 @@ class BaseScreen extends ConsumerWidget {
 
 /// BaseSettings
 class BaseSettingsScreen extends BaseScreen {
-  Environment env = new Environment();
   BaseSettingsScreen? rightScreen;
 
   @override
@@ -76,7 +76,6 @@ class BaseSettingsScreen extends BaseScreen {
   @override
   void subBuild(BuildContext context, WidgetRef ref) {
     super.subBuild(context, ref);
-    this.env = ref.watch(environmentProvider).env;
   }
 
   @override

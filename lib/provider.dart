@@ -5,7 +5,7 @@ final isSaverProvider = StateProvider<bool>((ref) {
   return false;
 });
 
-class StatusData {
+class StateData {
   int state = 0;
   int retry = 0;
   DateTime? startTime;
@@ -13,41 +13,41 @@ class StatusData {
   bool isSaver = false;
 }
 
-final statusProvider = ChangeNotifierProvider((ref) => statusNotifier(ref));
-class statusNotifier extends ChangeNotifier {
-  StatusData statsu = StatusData();
-  statusNotifier(ref){}
+final stateProvider = ChangeNotifierProvider((ref) => stateNotifier(ref));
+class stateNotifier extends ChangeNotifier {
+  StateData state = StateData();
+  stateNotifier(ref){}
 
   stop() {
-    statsu.state = 0;
-    statsu.retry = 0;
-    statsu.startTime = null;
-    statsu.connectTime = null;
+    state.state = 0;
+    state.retry = 0;
+    state.startTime = null;
+    state.connectTime = null;
     this.notifyListeners();
   }
   running() {
-    statsu.state = 1;
-    statsu.retry = 0;
-    statsu.startTime = DateTime.now();
-    statsu.connectTime = null;
+    state.state = 1;
+    state.retry = 0;
+    state.startTime = DateTime.now();
+    state.connectTime = null;
     this.notifyListeners();
   }
   connecting() {
-    statsu.state = 2;
-    statsu.retry = 0;
-    statsu.startTime = null;
-    statsu.connectTime = DateTime.now();
+    state.state = 2;
+    state.retry = 0;
+    state.startTime = null;
+    state.connectTime = DateTime.now();
     this.notifyListeners();
   }
   retry() {
-    statsu.state = 2;
-    statsu.retry += 1;
-    //statsu.startTime = statsu.startTime;
-    statsu.connectTime = DateTime.now();
+    state.state = 2;
+    state.retry += 1;
+    //state.startTime = state.startTime;
+    state.connectTime = DateTime.now();
     this.notifyListeners();
   }
   SwitchSaver() {
-    statsu.isSaver = !statsu.isSaver;
+    state.isSaver = !state.isSaver;
     this.notifyListeners();
   }
 }

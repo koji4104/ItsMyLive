@@ -14,6 +14,7 @@ import 'common.dart';
 import 'environment.dart';
 import 'constants.dart';
 import 'widgets.dart';
+import 'base_screen.dart';
 
 import 'package:audio_session/audio_session.dart';
 import 'package:haishin_kit/audio_settings.dart';
@@ -27,35 +28,26 @@ import 'package:permission_handler/permission_handler.dart';
 
 bool disableCamera = kIsWeb; // true=test
 
-final cameraScreenProvider = ChangeNotifierProvider((ref) => ChangeNotifier());
-class CameraScreen extends ConsumerWidget {
+class CameraScreen extends BaseScreen {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  StatusData _status = StatusData();
+  StateData _state = StateData();
   String _state2String = '';
 
   Timer? _timer;
-  Environment _env = Environment();
   final Battery _battery = Battery();
   int _batteryLevel = -1;
   int _batteryLevelStart = -1;
 
-  bool _bInit = false;
-  late WidgetRef _ref;
-  late BuildContext _context;
-  MyEdge _edge = MyEdge(provider:cameraScreenProvider);
   RunningStateScreen _RunningState = RunningStateScreen();
 
   RtmpConnection? _connection;
   RtmpStream? _stream;
 
-  void init(BuildContext context, WidgetRef ref) {
-    if(_bInit == false){
-      print('-- CameraScreen.init()');
-      _bInit = true;
-      _timer = Timer.periodic(Duration(seconds:1), _onTimer);
-      initPlatformState();
-    }
+  @override
+  Future init() async {
+    _timer = Timer.periodic(Duration(seconds:1), _onTimer);
+    initPlatformState();
   }
 
   @override
@@ -84,20 +76,15 @@ class CameraScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    Future.delayed(Duration.zero, () => init(context,ref));
-    ref.watch(cameraScreenProvider);
-    this._ref = ref;
-    this._context = context;
-    this._env = ref.watch(environmentProvider).env;
-    this._status = ref.watch(statusProvider).statsu;
-    this._edge.getEdge(context,ref);
-    bool _isSaver = _status.isSaver;
+    subBuild(context, ref);
+    this._state = ref.watch(stateProvider).state;
+    bool _isSaver = _state.isSaver;
 
     return Scaffold(
       key: _scaffoldKey,
       extendBody: true,
       body: Container(
-        margin: _edge.homebarEdge,
+        margin: edge.homebarEdge,
         child: Stack(children: <Widget>[
 
         // screen saver
@@ -120,13 +107,13 @@ class CameraScreen extends ConsumerWidget {
           MyIconButton(
             top:0.0, bottom: 0.0, right:30,
             icon: Icon(Icons.lens_rounded,
-            color: _status.state==2 ? Colors.blueAccent : _status.state==1 ? Colors.redAccent : Colors.white),
+            color: _state.state==2 ? Colors.blueAccent : _state.state==1 ? Colors.redAccent : Colors.white),
             onPressed:(){
-              _status.state==0 ? onStart() : onStop();
+              _state.state==0 ? onStart() : onStop();
             },
           ),
 
-        // Switch
+        // Camera Switch
         if(_isSaver==false)
           MyIconButton(
             bottom: 30.0, right: 30.0,
@@ -140,9 +127,9 @@ class CameraScreen extends ConsumerWidget {
             top: 50.0, left: 30.0,
             icon: Icon(Icons.settings, color:Colors.white),
             onPressed:() async {
-              int video_kbps = _env.video_kbps.val;
-              int camera_height = _env.camera_height.val;
-              int video_fps = _env.video_fps.val;
+              int video_kbps = env.video_kbps.val;
+              int camera_height = env.camera_height.val;
+              int video_fps = env.video_fps.val;
 
               await Navigator.of(context).push(
                 MaterialPageRoute(
@@ -150,9 +137,9 @@ class CameraScreen extends ConsumerWidget {
                 )
               );
 
-              if(video_kbps != _env.video_kbps.val
-              || camera_height != _env.camera_height.val
-              || video_fps != _env.video_fps.val){
+              if(video_kbps != env.video_kbps.val
+              || camera_height != env.camera_height.val
+              || video_fps != env.video_fps.val){
                 print('-- change env');
                 initPlatformState();
               }
@@ -162,7 +149,7 @@ class CameraScreen extends ConsumerWidget {
         // State
         //if(_isSaver==false)
           Positioned(
-            top:60, left:_edge.width/2-80, right:_edge.width/2-80,
+            top:60, left:edge.width/2-80, right:edge.width/2-80,
             child:Container(
               padding: EdgeInsets.fromLTRB(10,8,10,8),
               decoration: BoxDecoration(
@@ -176,7 +163,7 @@ class CameraScreen extends ConsumerWidget {
         // State2
         //if(_isSaver==false)
           Positioned(
-              bottom:40, left:_edge.width/2-80, right:_edge.width/2-80,
+              bottom:40, left:edge.width/2-80, right:edge.width/2-80,
               child:Container(
                 padding: EdgeInsets.fromLTRB(10,8,10,8),
                 decoration: BoxDecoration(
@@ -190,12 +177,12 @@ class CameraScreen extends ConsumerWidget {
               )
           ),
 
-          // saver
+          // Black Screen
           MyIconButton(
               bottom: 30.0, left: 30.0,
               icon: Icon(Icons.dark_mode, color:Colors.white),
               onPressed:() {
-                _ref.read(statusProvider).SwitchSaver();
+                ref.read(stateProvider).SwitchSaver();
               }
           ),
         ]
@@ -228,17 +215,17 @@ class CameraScreen extends ConsumerWidget {
         code = code.replaceAll('NetConnection.', '');
         MyLog.info(code);
         _state2String = code;
-        _ref.read(cameraScreenProvider).notifyListeners();
+        redraw();
 
         switch (event["data"]["code"]) {
           case 'NetConnection.Connect.Success':
-            _stream?.publish(_env.getKey()).then((_){
-              _ref.read(statusProvider).running();
+            _stream?.publish(env.getKey()).then((_){
+              ref.read(stateProvider).running();
             });
             break;
           case 'NetConnection.Connect.Closed':
-            if(_status.startTime != null){
-              _ref.read(statusProvider).retry();
+            if(_state.startTime != null){
+              ref.read(stateProvider).retry();
             }
             break;
           case 'NetConnection.Connect.Failed':
@@ -257,16 +244,16 @@ class CameraScreen extends ConsumerWidget {
       if(_stream!=null) {
         _stream!.audioSettings = AudioSettings(muted:false, bitrate:128 * 1000);
         _stream!.videoSettings = VideoSettings(
-          width: (_env.camera_height.val*16/9).toInt(),
-          height: _env.camera_height.val,
-          bitrate: _env.video_kbps.val * 1024,
+          width: (env.camera_height.val*16/9).toInt(),
+          height: env.camera_height.val,
+          bitrate: env.video_kbps.val * 1024,
         );
         _stream!.attachAudio(AudioSource());
-        _stream!.attachVideo(VideoSource(position:_env.camera_pos.val==0 ? CameraPosition.back : CameraPosition.front));
+        _stream!.attachVideo(VideoSource(position:env.camera_pos.val==0 ? CameraPosition.back : CameraPosition.front));
         _stream!.eventChannel.receiveBroadcastStream().listen((event) {
           MyLog.info(event["data"]["code"]);
         });
-        _ref.read(cameraScreenProvider).notifyListeners();
+        redraw();
       }
     }
   }
@@ -325,8 +312,8 @@ class CameraScreen extends ConsumerWidget {
   /// Switch
   Future<void> _onCameraSwitch(WidgetRef ref) async {
     if(_stream!=null) {
-      int pos = _env.camera_pos.val==0 ? 1 : 0;
-      ref.read(environmentProvider).saveData(_env.camera_pos,pos);
+      int pos = env.camera_pos.val==0 ? 1 : 0;
+      ref.read(environmentProvider).saveData(env.camera_pos,pos);
       _stream!.attachVideo(VideoSource(position:pos==0 ? CameraPosition.back : CameraPosition.front));
     }
   }
@@ -335,10 +322,10 @@ class CameraScreen extends ConsumerWidget {
   Future<bool> onStart() async {
     if(kIsWeb) {
       _batteryLevelStart = await _battery.batteryLevel;
-      _ref.read(statusProvider).connecting();
+      ref.read(stateProvider).connecting();
     }
 
-    if (_env.getUrl() == '') {
+    if (env.getUrl() == '') {
       showSnackBar('Error: url is empty');
       return false;
     }
@@ -351,10 +338,10 @@ class CameraScreen extends ConsumerWidget {
     //_ref.read(retryProvider.state).state = 0;
 
     try {
-      _connection!.connect(_env.getUrl());
+      _connection!.connect(env.getUrl());
       _batteryLevelStart = await _battery.batteryLevel;
-      _ref.read(statusProvider).connecting();
-      MyLog.info("Start " + _env.getUrl());
+      ref.read(stateProvider).connecting();
+      MyLog.info("Start " + env.getUrl());
     } catch (e) {
       MyLog.err('${e.toString()}');
     }
@@ -366,8 +353,8 @@ class CameraScreen extends ConsumerWidget {
     print('-- onStop');
     try {
       String s = 'Stop';
-      if(_status.startTime!=null) {
-        Duration dur = DateTime.now().difference(_status.startTime!);
+      if(_state.startTime!=null) {
+        Duration dur = DateTime.now().difference(_state.startTime!);
         if(dur.inMinutes>0)
           s += ' ${dur.inMinutes}min';
       }
@@ -375,7 +362,7 @@ class CameraScreen extends ConsumerWidget {
         s += ' batt ${_batteryLevelStart}->${_batteryLevel}%';
       }
       MyLog.info(s);
-      _ref.read(statusProvider).stop();
+      ref.read(stateProvider).stop();
 
       if(_connection!=null && _stream!=null)
         _connection!.close();
@@ -390,27 +377,27 @@ class CameraScreen extends ConsumerWidget {
     if(kIsWeb) return;
 
     // connect closed after publish
-    if(_status.connectTime!=null && _status.startTime!=null && _status.retry>=1) {
-      Duration dur = DateTime.now().difference(_status.connectTime!);
+    if(_state.connectTime!=null && _state.startTime!=null && _state.retry>=1) {
+      Duration dur = DateTime.now().difference(_state.connectTime!);
       if(dur.inSeconds>=10){
-        _connection!.connect(_env.getUrl());
-        _ref.read(statusProvider).retry();
-        MyLog.info("Connection retry ${_status.retry}");
+        _connection!.connect(env.getUrl());
+        ref.read(stateProvider).retry();
+        MyLog.info("Connection retry ${_state.retry}");
       }
     }
 
     // first connect timeout
-    if(_status.connectTime!=null && _status.startTime==null && _status.state==2 && _status.retry==0){
-      Duration dur = DateTime.now().difference(_status.connectTime!);
+    if(_state.connectTime!=null && _state.startTime==null && _state.state==2 && _state.retry==0){
+      Duration dur = DateTime.now().difference(_state.connectTime!);
       if(dur.inSeconds>=30){
         onStop();
       }
     }
 
     // Autostop
-    if(_status.state==1 && _status.startTime!=null) {
-      Duration dur = DateTime.now().difference(_status.startTime!);
-      if (_env.autostop_sec.val > 0 && dur.inSeconds>_env.autostop_sec.val) {
+    if(_state.state==1 && _state.startTime!=null) {
+      Duration dur = DateTime.now().difference(_state.startTime!);
+      if (env.autostop_sec.val > 0 && dur.inSeconds>env.autostop_sec.val) {
         MyLog.info("Autostop by settings");
         onStop();
         return;
@@ -418,7 +405,7 @@ class CameraScreen extends ConsumerWidget {
     }
 
     // check battery (every 1min)
-    if(_status.state==1 && DateTime.now().second == 0) {
+    if(_state.state==1 && DateTime.now().second == 0) {
       this._batteryLevel = await _battery.batteryLevel;
       if (this._batteryLevel < 10) {
         await MyLog.warn("Low battery");
@@ -429,9 +416,9 @@ class CameraScreen extends ConsumerWidget {
   } // _onTimer
 
   void showSnackBar(String msg) {
-    if(_context!=null) {
+    if(context!=null) {
       final snackBar = SnackBar(content: Text(msg));
-      ScaffoldMessenger.of(_context).showSnackBar(snackBar);
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
   }
 }
@@ -440,7 +427,7 @@ final runningStateProvider = ChangeNotifierProvider((ref) => ChangeNotifier());
 class RunningStateScreen extends ConsumerWidget {
   Timer? _timer;
   late WidgetRef _ref;
-  StatusData _status = StatusData();
+  StateData _state = StateData();
   String _stateString = '';
   bool _bInit = false;
   RunningStateScreen(){}
@@ -460,7 +447,7 @@ class RunningStateScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     this._ref = ref;
-    this._status = ref.watch(statusProvider).statsu;
+    this._state = ref.watch(stateProvider).state;
     _ref.watch(runningStateProvider);
     Future.delayed(Duration.zero, () => init(context,ref));
 
@@ -472,19 +459,19 @@ class RunningStateScreen extends ConsumerWidget {
 
   void _onTimer(Timer timer) async {
     String str = 'Stop';
-    if(_status.state==2){
-      if(_status.retry>0)
-        str = 'Retry${_status.retry}';
+    if (_state.state == 2) {
+      if (_state.retry > 0)
+        str = 'Retry${_state.retry}';
       else
         str = 'Connecting';
-      Duration dur = DateTime.now().difference(_status.connectTime!);
-      if(dur.inSeconds>0)
+      Duration dur = DateTime.now().difference(_state.connectTime!);
+      if (dur.inSeconds > 0)
         str += ' ${dur.inSeconds}s';
-    } else if(_status.state==1){
-      Duration dur = DateTime.now().difference(_status.startTime!);
+    } else if (_state.state == 1) {
+      Duration dur = DateTime.now().difference(_state.startTime!);
       str = dur2str(dur);
     }
-    if(_stateString!=str){
+    if (_stateString != str) {
       _stateString = str;
       _ref.read(runningStateProvider).notifyListeners();
     }
@@ -493,10 +480,10 @@ class RunningStateScreen extends ConsumerWidget {
   /// 01:00:00
   String dur2str(Duration dur) {
     String s = "";
-    if(dur.inHours>0)
+    if (dur.inHours > 0)
       s += dur.inHours.toString() + ':';
-    s += dur.inMinutes.remainder(60).toString().padLeft(2,'0') + ':';
-    s += dur.inSeconds.remainder(60).toString().padLeft(2,'0');
+    s += dur.inMinutes.remainder(60).toString().padLeft(2, '0') + ':';
+    s += dur.inSeconds.remainder(60).toString().padLeft(2, '0');
     return s;
   }
 }
@@ -511,11 +498,18 @@ class OrientationCamera extends StatelessWidget {
         useSensor: true,
         builder: (context) {
           double angle = 0.0;
-          switch(NativeDeviceOrientationReader.orientation(context)) {
-            case NativeDeviceOrientation.landscapeRight: angle=pi*1/2; break;
-            case NativeDeviceOrientation.landscapeLeft: angle=pi*3/2; break;
-            case NativeDeviceOrientation.portraitDown: angle=pi*2/2; break;
-            default: break;
+          switch (NativeDeviceOrientationReader.orientation(context)) {
+            case NativeDeviceOrientation.landscapeRight:
+              angle = pi * 1 / 2;
+              break;
+            case NativeDeviceOrientation.landscapeLeft:
+              angle = pi * 3 / 2;
+              break;
+            case NativeDeviceOrientation.portraitDown:
+              angle = pi * 2 / 2;
+              break;
+            default:
+              break;
           }
           return Transform.rotate(angle: angle, child: child);
         }
