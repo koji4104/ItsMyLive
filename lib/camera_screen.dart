@@ -284,7 +284,9 @@ class CameraScreen extends BaseScreen {
           scale: _scale,
           child: AspectRatio(
               aspectRatio: _aspect,
-              child: Image.network('/lib/assets/test.png', fit:BoxFit.cover)
+              child: kIsWeb ?
+              Image.network('/lib/assets/test.png', fit:BoxFit.cover) :
+              Image(image: AssetImage('lib/assets/test.png')),
           ),
         ),
       );
