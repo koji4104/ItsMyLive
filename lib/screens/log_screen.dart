@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'common.dart';
+import '/common.dart';
 
 class MyLogData {
   String time='';

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'localizations.dart';
-import 'common.dart';
-import 'environment.dart';
+import '/localizations.dart';
+import '/common.dart';
+import '/controllers/environment.dart';
+import '/constants.dart';
 import 'widgets.dart';
-import 'constants.dart';
 
 /// BaseScreen
 class BaseScreen extends ConsumerWidget {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'constants.dart';
+import '/constants.dart';
 
 Widget MyLabel(String label, {int? size, Color? color}) {
   return Align(

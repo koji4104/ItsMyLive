@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'log_screen.dart';
-import 'environment.dart';
+import '/controllers/environment.dart';
 import 'base_screen.dart';
 import 'widgets.dart';
-import 'constants.dart';
+import '/constants.dart';
 
 /// Settings
 class SettingsScreen extends BaseSettingsScreen {
