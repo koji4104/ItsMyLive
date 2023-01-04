@@ -46,7 +46,7 @@ class stateNotifier extends ChangeNotifier {
     state.connectTime = DateTime.now();
     this.notifyListeners();
   }
-  SwitchSaver() {
+  switchSaver() {
     state.isSaver = !state.isSaver;
     this.notifyListeners();
   }

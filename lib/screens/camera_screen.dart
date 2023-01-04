@@ -136,9 +136,9 @@ class CameraScreen extends BaseScreen {
                   top: 50.0, left: 40.0,
                   icon: Icon(Icons.settings, color: Colors.white),
                   onPressed: () async {
-                    int video_kbps = env.video_kbps.val;
-                    int camera_height = env.camera_height.val;
-                    int video_fps = env.video_fps.val;
+                    int old_video_kbps = env.video_kbps.val;
+                    int old_camera_height = env.camera_height.val;
+                    int old_video_fps = env.video_fps.val;
 
                     await Navigator.of(context).push(
                         MaterialPageRoute(
@@ -146,9 +146,9 @@ class CameraScreen extends BaseScreen {
                         )
                     );
 
-                    if (video_kbps != env.video_kbps.val
-                        || camera_height != env.camera_height.val
-                        || video_fps != env.video_fps.val) {
+                    if (old_video_kbps != env.video_kbps.val
+                        || old_camera_height != env.camera_height.val
+                        || old_video_fps != env.video_fps.val) {
                       print('-- change env');
                       initPlatformState();
                     }
@@ -193,7 +193,7 @@ class CameraScreen extends BaseScreen {
                 bottom: 40.0, left: 40.0,
                 icon: Icon(Icons.dark_mode, color: Colors.white),
                 onPressed: () {
-                  ref.read(stateProvider).SwitchSaver();
+                  ref.read(stateProvider).switchSaver();
                 }
             ),
           ]
@@ -214,11 +214,16 @@ class CameraScreen extends BaseScreen {
       AVAudioSessionCategoryOptions.allowBluetooth,
     ));
 
-    if(_stream != null)
+    if(_stream != null){
       await _stream!.close();
-    if(_connection != null)
+      await _stream!.dispose();
+    }
+    if(_connection != null) {
       _connection!.close();
+      _connection!.dispose();
+    }
 
+    print('-- initPlatformState() _connection');
     _connection = await RtmpConnection.create();
     if(_connection!=null) {
       _connection!.eventChannel.receiveBroadcastStream().listen((event) {
@@ -251,6 +256,7 @@ class CameraScreen extends BaseScreen {
         }
       });
 
+      print('-- initPlatformState() _stream');
       _stream = await RtmpStream.create(_connection!);
       if(_stream!=null) {
         _stream!.audioSettings = AudioSettings(muted:false, bitrate:128 * 1000);
@@ -314,6 +320,7 @@ class CameraScreen extends BaseScreen {
         ' scale=${_scale.toStringAsFixed(2)}');
 
     if(disableCamera || _stream == null) {
+      print('-- if(disableCamera || _stream == null)');
       return Positioned(
           left:0, top:0, right:0, bottom:0,
           child: Container(color: Color(0xFF444444)));
