@@ -45,6 +45,7 @@ class MyEdge {
 
   ProviderBase? _provider;
   double width = 100;
+  double height = 100;
 
   /// Edgeを取得
   /// 各スクリーンのbuild()内で呼び出す
@@ -52,6 +53,7 @@ class MyEdge {
     if (width == MediaQuery.of(context).size.width)
       return;
     width = MediaQuery.of(context).size.width;
+    height = MediaQuery.of(context).size.height;
     print('-- getEdge() width=${width.toInt()}');
 
     if (!kIsWeb && Platform.isAndroid) {

@@ -77,121 +77,132 @@ class CameraScreen extends BaseScreen {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     subBuild(context, ref);
-    this._state = ref.watch(stateProvider).state;
+    this._state = ref
+        .watch(stateProvider)
+        .state;
     bool _isSaver = _state.isSaver;
 
     return Scaffold(
-      key: _scaffoldKey,
-      extendBody: true,
-      body: Container(
-        margin: edge.homebarEdge,
-        child: Stack(children: <Widget>[
+        key: _scaffoldKey,
+        extendBody: true,
+        body: Container(
+          margin: edge.homebarEdge,
+          child: Stack(children: <Widget>[
 
-        // screen saver
-        if (_isSaver)
-          Positioned(
-              top:0, bottom:0, left:0, right:0,
-              child: TextButton(
-                child: Text(''),
-                style: ButtonStyle(backgroundColor:MaterialStateProperty.all<Color>(Colors.black)),
-                onPressed:(){
-                },
-              )
-          ),
-
-        if(_isSaver==false)
-          _cameraWidget(context),
-
-        // Start
-        //if (_isSaver==false)
-          MyIconButton(
-            top:0.0, bottom: 0.0, right:30,
-            icon: Icon(Icons.lens_rounded,
-            color: _state.state==2 ? Colors.blueAccent : _state.state==1 ? Colors.redAccent : Colors.white),
-            onPressed:(){
-              _state.state==0 ? onStart() : onStop();
-            },
-          ),
-
-        // Camera Switch
-        if(_isSaver==false)
-          MyIconButton(
-            bottom: 30.0, right: 30.0,
-            icon: Icon(Icons.autorenew, color: Colors.white),
-            onPressed:() => _onCameraSwitch(ref),
-          ),
-
-        // Settings
-        if(_isSaver==false)
-          MyIconButton(
-            top: 50.0, left: 30.0,
-            icon: Icon(Icons.settings, color:Colors.white),
-            onPressed:() async {
-              int video_kbps = env.video_kbps.val;
-              int camera_height = env.camera_height.val;
-              int video_fps = env.video_fps.val;
-
-              await Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => SettingsScreen(),
-                )
-              );
-
-              if(video_kbps != env.video_kbps.val
-              || camera_height != env.camera_height.val
-              || video_fps != env.video_fps.val){
-                print('-- change env');
-                initPlatformState();
-              }
-            }
-          ),
-
-        // State
-        //if(_isSaver==false)
-          Positioned(
-            top:60, left:edge.width/2-80, right:edge.width/2-80,
-            child:Container(
-              padding: EdgeInsets.fromLTRB(10,8,10,8),
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(30),
+            // screen saver
+            if (_isSaver)
+              Positioned(
+                  top: 0,
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: TextButton(
+                    child: Text(''),
+                    style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all<Color>(
+                            Colors.black)),
+                    onPressed: () {},
+                  )
               ),
-              child: _RunningState,
-            )
-          ),
 
-        // State2
-        //if(_isSaver==false)
-          Positioned(
-              bottom:40, left:edge.width/2-80, right:edge.width/2-80,
-              child:Container(
-                padding: EdgeInsets.fromLTRB(10,8,10,8),
-                decoration: BoxDecoration(
+            if(_isSaver == false)
+              _cameraWidget(context),
+
+            // Start
+            //if (_isSaver==false)
+            MyIconButton(
+              top: 0.0,
+              bottom: 0.0,
+              right: 40,
+              icon: Icon(Icons.lens_rounded,
+                  color: _state.state == 2 ? Colors.blueAccent : _state.state ==
+                      1 ? Colors.redAccent : Colors.white),
+              onPressed: () {
+                _state.state == 0 ? onStart() : onStop();
+              },
+            ),
+
+            // Camera Switch
+            if(_isSaver == false)
+              MyIconButton(
+                bottom: 40.0, right: 40.0,
+                icon: Icon(Icons.autorenew, color: Colors.white),
+                onPressed: () => _onCameraSwitch(ref),
+              ),
+
+            // Settings
+            if(_isSaver == false)
+              MyIconButton(
+                  top: 50.0, left: 40.0,
+                  icon: Icon(Icons.settings, color: Colors.white),
+                  onPressed: () async {
+                    int video_kbps = env.video_kbps.val;
+                    int camera_height = env.camera_height.val;
+                    int video_fps = env.video_fps.val;
+
+                    await Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => SettingsScreen(),
+                        )
+                    );
+
+                    if (video_kbps != env.video_kbps.val
+                        || camera_height != env.camera_height.val
+                        || video_fps != env.video_fps.val) {
+                      print('-- change env');
+                      initPlatformState();
+                    }
+                  }
+              ),
+
+            // State
+            //if(_isSaver==false)
+            Positioned(
+                top: 60, left: edge.width / 2 - 80, right: edge.width / 2 - 80,
+                child: Container(
+                  padding: EdgeInsets.fromLTRB(10, 8, 10, 8),
+                  decoration: BoxDecoration(
                     color: Colors.black54,
                     borderRadius: BorderRadius.circular(30),
-                ),
-                child: Text(_state2String,
-                    textAlign:TextAlign.center,
-                    style: TextStyle(fontSize:16, color: Colors.white)
-                ),
-              )
-          ),
+                  ),
+                  child: _RunningState,
+                )
+            ),
 
-          // Black Screen
-          MyIconButton(
-              bottom: 30.0, left: 30.0,
-              icon: Icon(Icons.dark_mode, color:Colors.white),
-              onPressed:() {
-                ref.read(stateProvider).SwitchSaver();
-              }
+            // State2
+            //if(_isSaver==false)
+            Positioned(
+                bottom: 50,
+                left: edge.width / 2 - 80,
+                right: edge.width / 2 - 80,
+                child: Container(
+                  padding: EdgeInsets.fromLTRB(10, 8, 10, 8),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Text(_state2String,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16, color: Colors.white)
+                  ),
+                )
+            ),
+
+            // Black Screen
+            MyIconButton(
+                bottom: 40.0, left: 40.0,
+                icon: Icon(Icons.dark_mode, color: Colors.white),
+                onPressed: () {
+                  ref.read(stateProvider).SwitchSaver();
+                }
+            ),
+          ]
           ),
-        ]
-      ),
-    ));
+        ));
   }
 
   Future<void> initPlatformState() async {
-    if(disableCamera) return;
+    if(disableCamera || IS_TEST) return;
     await Permission.camera.request();
     await Permission.microphone.request();
 
@@ -260,6 +271,31 @@ class CameraScreen extends BaseScreen {
 
   /// cameraWidget
   Widget _cameraWidget(BuildContext context) {
+    if(IS_TEST){
+      print('-- _cameraWidget() IS_TEST');
+      double sw = edge.width;
+      double sh = edge.height;
+      double dw = sw>sh ? sw : sh;
+      double dh = sw>sh ? sh : sw;
+      double _aspect = sw/sh;
+
+      // 16:10 (Up-down black) or 17:9 (Left-right black)
+      // e.g. double _scale = dw/dh < 16.0/9.0 ? dh/dw * 16.0/9.0 : dw/dh * 9.0/16.0;
+      double _scale = dw/dh < 16.0/9.0 ? dh/dw * 16.0/9.0 : dw/dh * 9.0/16.0;
+
+      return Center(
+        child: Transform.scale(
+          scale: _scale,
+          child: AspectRatio(
+            aspectRatio: _aspect,
+            child: kIsWeb ?
+            Image.network('/lib/assets/sample.png', fit:BoxFit.cover) :
+            Image(image: AssetImage('lib/assets/sample.png')),
+          ),
+        ),
+      );
+    }
+
     Size _screenSize = MediaQuery.of(context).size;
     Size _cameraSize = Size(1920,1080);
     double sw = _screenSize.width;
@@ -276,21 +312,6 @@ class CameraScreen extends BaseScreen {
         ' camera=${_cameraSize.width.toInt()}x${_cameraSize.height.toInt()}'
         ' aspect=${_aspect.toStringAsFixed(2)}'
         ' scale=${_scale.toStringAsFixed(2)}');
-
-    if(IS_TEST){
-      print('-- IS_TEST');
-      return Center(
-        child: Transform.scale(
-          scale: _scale,
-          child: AspectRatio(
-              aspectRatio: _aspect,
-              child: kIsWeb ?
-              Image.network('/lib/assets/test.png', fit:BoxFit.cover) :
-              Image(image: AssetImage('lib/assets/test.png')),
-          ),
-        ),
-      );
-    }
 
     if(disableCamera || _stream == null) {
       return Positioned(
