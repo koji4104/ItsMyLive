@@ -215,51 +215,68 @@ class EditUrlScreen extends BaseSettingsScreen {
   }
 
   Widget getList() {
+    bool isChanged = (_urlOld != _urlController.text) || (_keyOld != _keyController.text);
+    double buttonWidth = 140.0;
     return Column(children: [
-      MyLabel(''),
       MyLabel('URL'),
       MyTextField(controller: _urlController, keyboardType: TextInputType.url),
-      MyLabel(''),
       MyLabel('KEY'),
-      MyTextField(controller: _keyController),
+      MyTextField(controller: _keyController, keyboardType: TextInputType.url),
       MyLabel(''),
+      Row(mainAxisAlignment:MainAxisAlignment.center, children:[
       MyTextButton(
-          width: 200,
-          title: l10n('Save'),
-          onPressed: () async {
-            _url = _urlOld = _urlController.text;
-            _key = _keyOld = _keyController.text;
-            ref.read(environmentProvider).saveUrl(num, _url);
-            ref.read(environmentProvider).saveKey(num, _key);
-          }
+        width: buttonWidth,
+        title: l10n('Save'),
+        cancelStyle: isChanged ? null : true,
+        onPressed: isChanged ?
+          () async {
+          _url = _urlOld = _urlController.text;
+          _key = _keyOld = _keyController.text;
+          ref.read(environmentProvider).saveUrl(num, _url);
+          ref.read(environmentProvider).saveKey(num, _key);
+        } : null,
       ),
       MyTextButton(
-          width: 200,
-          title: l10n('Undo'),
-          onPressed: () async {
-            _urlController.text = _urlOld;
-            _keyController.text = _keyOld;
-            redraw();
-          }
-      ),
+        width: buttonWidth,
+        title: l10n('Undo'),
+        cancelStyle: isChanged ? null : true,
+        onPressed: isChanged ?
+            () async {
+          _urlController.text = _urlOld;
+          _keyController.text = _keyOld;
+          redraw();
+        } : null,
+      )]),
+      Row(mainAxisAlignment:MainAxisAlignment.center, children:[
       MyTextButton(
-          width: 200,
+          width: buttonWidth,
           title: l10n('rtmp://'),
           onPressed: () async {
-            _urlController.text = 'rtmp://';
+            _urlController.text = 'rtmp://:1935/live';
             redraw();
           }
       ),
+      MyTextButton(
+          width: buttonWidth,
+          title: l10n('Youtube'),
+          onPressed: () async {
+            _urlController.text = 'rtmp://a.rtmp.youtube.com/live2';
+            redraw();
+          }
+      )]),
     ]);
   }
 
   Widget MyTextField({ required TextEditingController controller, TextInputType? keyboardType}) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal:8, vertical:2),
+      padding: EdgeInsets.symmetric(horizontal:8, vertical:0),
       child:TextField(
-        style: TextStyle(color:Colors.white),
+        style: TextStyle(color:Colors.white, fontSize:14),
         controller: controller,
         keyboardType: keyboardType,
+        onChanged: (_) {
+          redraw();
+        },
       )
     );
   }

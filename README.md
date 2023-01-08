@@ -11,6 +11,36 @@ Enter URL and KEY in App. Note that the KEY changes each time the button is pres
 
 ## AWS MediaLive
 
-e.g. rtmp://xxxx/test/test1
+e.g. rtmp://xxxx/test/abcd
 URL = rtmp://xxxx/test
-KEY = test1
+KEY = abcd
+
+## Nginx
+
+start nginx
+nginx -s quit
+
+URL = rtmp://xxxx:1935/live
+KEY = live
+
+### Modify the conf file
+vi /etc/nginx/nginx.conf
+
+### Add the following
+rtmp {
+    server {
+        listen 1935;
+        chunk_size 4096;
+        access_log /var/log/rtmp_access.log;
+        application live { # name is live
+            live on;
+            record off;
+        }
+    }
+}
+
+ffmpeg -re -y -i "rtmp://localhost:1935/live/live" -movflags faststart -c copy C:\dev\tools\ffmpeg\rec.mp4
+
+ffmpeg\ffplay -i "rtmp://localhost:1935/live/live?mode=listener"
+
+

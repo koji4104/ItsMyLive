@@ -183,7 +183,7 @@ class CameraScreen extends BaseScreen {
                   ),
                   child: Text(_state2String,
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 16, color: Colors.white)
+                      style: TextStyle(fontSize: 14, color: Colors.white)
                   ),
                 )
             ),
@@ -202,7 +202,7 @@ class CameraScreen extends BaseScreen {
   }
 
   Future<void> initPlatformState() async {
-    if(disableCamera || IS_TEST) return;
+    if (disableCamera || IS_TEST) return;
     await Permission.camera.request();
     await Permission.microphone.request();
 
@@ -214,62 +214,83 @@ class CameraScreen extends BaseScreen {
       AVAudioSessionCategoryOptions.allowBluetooth,
     ));
 
-    if(_stream != null){
-      await _stream!.close();
-      await _stream!.dispose();
+    if (_connection == null) {
+      print('-- initPlatformState() _connection create');
+      _connection = await RtmpConnection.create();
     }
-    if(_connection != null) {
-      _connection!.close();
-      _connection!.dispose();
-    }
-
-    print('-- initPlatformState() _connection');
-    _connection = await RtmpConnection.create();
-    if(_connection!=null) {
-      _connection!.eventChannel.receiveBroadcastStream().listen((event) {
+    if (_connection != null) {
+      StreamSubscription _streamSubscription = _connection!.eventChannel.receiveBroadcastStream().listen((event) {
         String code = event["data"]["code"];
-        code = code.replaceAll('NetConnection.', '');
-        MyLog.info(code);
-        _state2String = code;
-        redraw();
+        String desc = event["data"]["description"];
 
+        String s = (desc.length>0) ? '${code} (${desc})' :'${code}';
+        MyLog.debug(s);
+
+        if(code!='NetConnection.Connect.Success' && code!='NetStream.Publish.Start') {
+          _state2String = desc;
+          redraw();
+        }
         switch (event["data"]["code"]) {
           case 'NetConnection.Connect.Success':
-            _stream?.publish(env.getKey()).then((_){
+            _stream?.publish(env.getKey()).then((_) {
               ref.read(stateProvider).running();
+              _state2String = '';
+              redraw();
             });
             break;
           case 'NetConnection.Connect.Closed':
-            if(_state.startTime != null){
+            if (_state.publishStartedTime != null) {
               ref.read(stateProvider).retry();
+              _connection!.connect(env.getUrl());
+              MyLog.warn("Retry (${_state.retry})");
             }
             break;
           case 'NetConnection.Connect.Failed':
-          case 'NetConnection.Call.BadVersion': break;
-          case 'NetConnection.Call.Failed': break;
-          case 'NetConnection.Call.Prohibited': break;
-          case 'NetConnection.Connect.AppShutdown': break;
-          case 'NetConnection.Connect.IdleTimeOut': break;
-          case 'NetConnection.Connect.InvalidApp': break;
-          case 'NetConnection.Connect.NetworkChange': break;
-          case 'NetConnection.Connect.Rejected': break;
+          case 'NetConnection.Call.BadVersion':
+          case 'NetConnection.Call.Failed':
+          case 'NetConnection.Call.Prohibited':
+          case 'NetConnection.Connect.AppShutdown':
+          case 'NetConnection.Connect.IdleTimeOut':
+          case 'NetConnection.Connect.InvalidApp':
+          case 'NetConnection.Connect.NetworkChange':
+          case 'NetConnection.Connect.Rejected':
+            break;
+          case 'NetStream.Publish.BadName':
+            //if (_state.publishStartedTime != null) {
+              ref.read(stateProvider).retry();
+              MyLog.warn("Retry (${_state.retry})");
+              _stream?.publish(env.getKey()).then((_) {
+                ref.read(stateProvider).running();
+                _state2String = '';
+                redraw();
+              });
+            //}
+            break;
+          case 'NetStream.Publish.Start':
+            break;
         }
       });
 
-      print('-- initPlatformState() _stream');
-      _stream = await RtmpStream.create(_connection!);
-      if(_stream!=null) {
-        _stream!.audioSettings = AudioSettings(muted:false, bitrate:128 * 1000);
+      if(_stream == null) {
+        print('-- initPlatformState() _stream');
+        _stream = await RtmpStream.create(_connection!);
+      }
+      if (_stream != null) {
+        _stream!.audioSettings = AudioSettings(muted: false, bitrate: 128 * 1000);
         _stream!.videoSettings = VideoSettings(
-          width: (env.camera_height.val*16/9).toInt(),
+          width: (env.camera_height.val * 16 / 9).toInt(),
           height: env.camera_height.val,
           bitrate: env.video_kbps.val * 1024,
         );
         _stream!.attachAudio(AudioSource());
-        _stream!.attachVideo(VideoSource(position:env.camera_pos.val==0 ? CameraPosition.back : CameraPosition.front));
-        _stream!.eventChannel.receiveBroadcastStream().listen((event) {
-          MyLog.info(event["data"]["code"]);
-        });
+        _stream!.attachVideo(
+            VideoSource(position: env.camera_pos.val == 0 ? CameraPosition.back : CameraPosition.front));
+
+        //_stream!.eventChannel.receiveBroadcastStream().listen((event) {
+        //  MyLog.info('stream listen event[data]');
+        //  MyLog.info('${event["data"]}');
+        //});
+
         redraw();
       }
     }
@@ -300,10 +321,12 @@ class CameraScreen extends BaseScreen {
           ),
         ),
       );
-    }
+    } // TEST
 
+    // -- screen=392x825 camera=853x480 aspect=0.56 scale=1.18
+    // -- screen=392x825 camera=853x480 aspect=0.56 scale=1.18
     Size _screenSize = MediaQuery.of(context).size;
-    Size _cameraSize = Size(1920,1080);
+    Size _cameraSize = Size((env.camera_height.val * 16 / 9), env.camera_height.val.toDouble());
     double sw = _screenSize.width;
     double sh = _screenSize.height;
     double dw = sw>sh ? sw : sh;
@@ -350,7 +373,7 @@ class CameraScreen extends BaseScreen {
 
   /// onStart
   Future<bool> onStart() async {
-    if(kIsWeb) {
+    if (kIsWeb) {
       _batteryLevelStart = await _battery.batteryLevel;
       ref.read(stateProvider).connecting();
     }
@@ -360,7 +383,7 @@ class CameraScreen extends BaseScreen {
       return false;
     }
 
-    if(_connection==null || _stream==null) {
+    if (_connection == null || _stream == null) {
       showSnackBar('Error: camera is null');
       return false;
     }
@@ -383,8 +406,8 @@ class CameraScreen extends BaseScreen {
     print('-- onStop');
     try {
       String s = 'Stop';
-      if(_state.startTime!=null) {
-        Duration dur = DateTime.now().difference(_state.startTime!);
+      if(_state.publishStartedTime!=null) {
+        Duration dur = DateTime.now().difference(_state.publishStartedTime!);
         if(dur.inMinutes>0)
           s += ' ${dur.inMinutes}min';
       }
@@ -406,27 +429,27 @@ class CameraScreen extends BaseScreen {
   void _onTimer(Timer timer) async {
     if(kIsWeb) return;
 
-    // connect closed after publish
-    if(_state.connectTime!=null && _state.startTime!=null && _state.retry>=1) {
-      Duration dur = DateTime.now().difference(_state.connectTime!);
+    // Retry after publish
+    if(_state.connectStartedTime!=null && _state.publishStartedTime!=null && _state.retry>=1) {
+      Duration dur = DateTime.now().difference(_state.connectStartedTime!);
       if(dur.inSeconds>=10){
-        _connection!.connect(env.getUrl());
         ref.read(stateProvider).retry();
-        MyLog.info("Connection retry ${_state.retry}");
+        _connection!.connect(env.getUrl());
+        MyLog.warn("Retry (${_state.retry})");
       }
     }
 
     // first connect timeout
-    if(_state.connectTime!=null && _state.startTime==null && _state.state==2 && _state.retry==0){
-      Duration dur = DateTime.now().difference(_state.connectTime!);
+    if(_state.connectStartedTime!=null && _state.publishStartedTime==null && _state.state==2 && _state.retry==0){
+      Duration dur = DateTime.now().difference(_state.connectStartedTime!);
       if(dur.inSeconds>=30){
         onStop();
       }
     }
 
     // Autostop
-    if(_state.state==1 && _state.startTime!=null) {
-      Duration dur = DateTime.now().difference(_state.startTime!);
+    if(_state.state==1 && _state.publishStartedTime!=null) {
+      Duration dur = DateTime.now().difference(_state.publishStartedTime!);
       if (env.autostop_sec.val > 0 && dur.inSeconds>env.autostop_sec.val) {
         MyLog.info("Autostop by settings");
         onStop();
@@ -491,14 +514,14 @@ class RunningStateScreen extends ConsumerWidget {
     String str = 'Stop';
     if (_state.state == 2) {
       if (_state.retry > 0)
-        str = 'Retry${_state.retry}';
+        str = 'Retry (${_state.retry})';
       else
         str = 'Connecting';
-      Duration dur = DateTime.now().difference(_state.connectTime!);
+      Duration dur = DateTime.now().difference(_state.connectStartedTime!);
       if (dur.inSeconds > 0)
         str += ' ${dur.inSeconds}s';
     } else if (_state.state == 1) {
-      Duration dur = DateTime.now().difference(_state.startTime!);
+      Duration dur = DateTime.now().difference(_state.publishStartedTime!);
       str = dur2str(dur);
     }
     if (_stateString != str) {

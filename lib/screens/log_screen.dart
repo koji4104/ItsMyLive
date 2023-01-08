@@ -32,9 +32,9 @@ class MyLogData {
 }
 
 String sample = '''
-2022-04-01 00:00:00\tuser\terr\tapp\tmessage1
-2022-04-02 00:00:00\tuser\twarn\tapp\tmessage2
-2022-04-03 00:00:00\tuser\tinfo\tapp\tmessage3
+2022-04-01 00:00:00.000\tuser\terr\tapp\tmessage1
+2022-04-02 00:00:00.000\tuser\twarn\tapp\tmessage2
+2022-04-03 00:00:00.000\tuser\tinfo\tapp\tmessage3
 ''';
 
 final logListProvider = StateProvider<List<MyLogData>>((ref) {
@@ -51,7 +51,10 @@ class MyLog {
     await MyLog.write('warn', 'app', msg);
   }
   static err(String msg) async {
-    await MyLog.write('err', 'app', msg);
+    await MyLog.write('error', 'app', msg);
+  }
+  static debug(String msg) async {
+    await MyLog.write('debug', 'app', msg);
   }
   static write(String level, String event, String msg) async {
     print('-- ${level} ${msg}');
@@ -78,6 +81,7 @@ class MyLog {
     await File(path).writeAsString(tsv, mode:FileMode.append, flush:true);
   }
 
+  /// read
   static Future<List<MyLogData>> read() async {
     List<MyLogData> list = [];
     try {
@@ -146,18 +150,27 @@ class LogScreen extends ConsumerWidget {
     List<TextSpan> spans = [];
     TextStyle tsErr = TextStyle(color:Color(0xFFFF8888));
     TextStyle tsWarn = TextStyle(color:Color(0xFFeeee44));
+    TextStyle tsInfo = TextStyle(color:Color(0xFFFFFFFF));
+    TextStyle tsDebug = TextStyle(color:Color(0xFFaaaaaa));
     TextStyle tsTime = TextStyle(color:Color(0xFFcccccc));
 
-    String format = MediaQuery.of(context).size.width > 500 ? "yyyy-MM-dd HH:mm" : "MM-dd HH:mm";
+    String format = MediaQuery.of(context).size.width > 500 ? "yyyy-MM-dd HH:mm.ss" : "MM-dd HH:mm";
     for(MyLogData d in list) {
-      String stime = DateFormat(format).format(DateTime.parse(d.time));
-      Wrap w = Wrap(children:[getText(stime),getText(d.msg)]);
-      spans.add(TextSpan(text:stime, style:tsTime));
-      if (d.level.contains('err'))
-        spans.add(TextSpan(text: ' '+d.level, style:tsErr));
-      else if (d.level.contains('warn'))
-        spans.add(TextSpan(text: ' '+d.level, style:tsWarn));
-      spans.add(TextSpan(text:' '+d.msg+'\n'));
+      try {
+        String stime = DateFormat(format).format(DateTime.parse(d.time));
+        Wrap w = Wrap(children: [getText(stime), getText(d.msg)]);
+        spans.add(TextSpan(text: stime, style: tsTime));
+        if (d.level.toLowerCase().contains('err'))
+          spans.add(TextSpan(text: ' error', style: tsErr));
+        else if (d.level.toLowerCase().contains('warn'))
+          spans.add(TextSpan(text: ' warn', style: tsWarn));
+        if (d.level.toLowerCase().contains('debug'))
+          spans.add(TextSpan(text: ' ' + d.msg + '\n', style: tsDebug));
+        else
+          spans.add(TextSpan(text: ' ' + d.msg + '\n', style: tsInfo));
+      } on Exception catch (e) {
+
+      }
     }
 
     return Container(

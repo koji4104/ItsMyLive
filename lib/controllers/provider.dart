@@ -6,10 +6,11 @@ final isSaverProvider = StateProvider<bool>((ref) {
 });
 
 class StateData {
+  /// 0 stop 1 running 2 connecting or retry
   int state = 0;
   int retry = 0;
-  DateTime? startTime;
-  DateTime? connectTime;
+  DateTime? publishStartedTime;
+  DateTime? connectStartedTime;
   bool isSaver = false;
 }
 
@@ -21,29 +22,29 @@ class stateNotifier extends ChangeNotifier {
   stop() {
     state.state = 0;
     state.retry = 0;
-    state.startTime = null;
-    state.connectTime = null;
+    state.publishStartedTime = null;
+    state.connectStartedTime = null;
     this.notifyListeners();
   }
   running() {
     state.state = 1;
     state.retry = 0;
-    state.startTime = DateTime.now();
-    state.connectTime = null;
+    state.publishStartedTime = DateTime.now();
+    state.connectStartedTime = null;
     this.notifyListeners();
   }
   connecting() {
     state.state = 2;
     state.retry = 0;
-    state.startTime = null;
-    state.connectTime = DateTime.now();
+    state.publishStartedTime = null;
+    state.connectStartedTime = DateTime.now();
     this.notifyListeners();
   }
   retry() {
     state.state = 2;
     state.retry += 1;
     //state.startTime = state.startTime;
-    state.connectTime = DateTime.now();
+    state.connectStartedTime = DateTime.now();
     this.notifyListeners();
   }
   switchSaver() {
