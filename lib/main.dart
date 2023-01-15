@@ -42,8 +42,8 @@ class MyApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: [
-        const Locale('en',''),
-        const Locale('ja',''),
+        const Locale('en', ''),
+        const Locale('ja', ''),
       ],
     );
   }
@@ -56,12 +56,12 @@ class MyPageTransitionsTheme extends PageTransitionsTheme {
   static const PageTransitionsBuilder builder = CupertinoPageTransitionsBuilder();
   @override
   Widget buildTransitions<T>(
-      PageRoute<T> route,
-      BuildContext context,
-      Animation<double> animation,
-      Animation<double> secondaryAnimation,
-      Widget child,
-      ) {
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
     return builder.buildTransitions<T>(route, context, animation, secondaryAnimation, child);
   }
 }

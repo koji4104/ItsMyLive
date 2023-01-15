@@ -11,7 +11,7 @@ class BaseScreen extends ConsumerWidget {
   late BuildContext context;
   late WidgetRef ref;
   ChangeNotifierProvider baseProvider = ChangeNotifierProvider((ref) => ChangeNotifier());
-  late MyEdge edge = MyEdge(provider:baseProvider);
+  late MyEdge edge = MyEdge(provider: baseProvider);
   Environment env = new Environment();
   bool bInit = false;
 
@@ -38,11 +38,9 @@ class BaseScreen extends ConsumerWidget {
   }
 
   Future<int?> NavigatorPush(var screen) async {
-    int? ret = await Navigator.of(context).push(
-        MaterialPageRoute<int>(
-            builder: (context) => screen,
-        )
-    );
+    int? ret = await Navigator.of(context).push(MaterialPageRoute<int>(
+      builder: (context) => screen,
+    ));
     return ret;
   }
 
@@ -51,12 +49,12 @@ class BaseScreen extends ConsumerWidget {
   }
 
   void showSnackBar(String msg) {
-    final snackBar = SnackBar(content:Text(msg));
+    final snackBar = SnackBar(content: Text(msg));
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   redraw() {
-    if(ref.read(baseProvider)!=null) ref.read(baseProvider)!.notifyListeners();
+    if (ref.read(baseProvider) != null) ref.read(baseProvider)!.notifyListeners();
   }
 }
 
@@ -96,11 +94,10 @@ class BaseSettingsScreen extends BaseScreen {
           } else {
             NavigatorPush(RadioListScreen(data: data));
           }
-        }
-    );
+        });
   }
 
-  bool is2screen(){
+  bool is2screen() {
     return edge.width > 600;
   }
 
@@ -127,48 +124,42 @@ class RadioListScreen extends BaseSettingsScreen {
   Widget build(BuildContext context, WidgetRef ref) {
     subBuild(context, ref);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n(data.name)), backgroundColor:Color(0xFF000000),),
-      body: Container(
-          margin: edge.settingsEdge,
-          child:getList()
+      appBar: AppBar(
+        title: Text(l10n(data.name)),
+        backgroundColor: Color(0xFF000000),
       ),
+      body: Container(margin: edge.settingsEdge, child: getList()),
     );
   }
 
   @override
   Widget getList() {
     List<Widget> list = [];
-    for(int i=0; i<data.vals.length; i++){
-      list.add(
-          MyRadioListTile(
-            title: l10n(data.keys[i]),
-            value: data.vals[i],
-            groupValue: selVal,
-            onChanged:() => _onRadioSelected(data.vals[i]),
-          )
-      );
+    for (int i = 0; i < data.vals.length; i++) {
+      list.add(MyRadioListTile(
+        title: l10n(data.keys[i]),
+        value: data.vals[i],
+        groupValue: selVal,
+        onChanged: () => _onRadioSelected(data.vals[i]),
+      ));
     }
-    list.add(MyLabel(l10n(data.name+'_desc')));
-    return Column(children:list);
+    list.add(MyLabel(l10n(data.name + '_desc')));
+    return Column(children: list);
   }
 
   Widget MyRadioListTile(
-      { required String title,
-        required int value,
-        required int groupValue,
-        required void Function()? onChanged}) {
-    TextStyle ts = TextStyle(fontSize: 16, color: groupValue==value ? selectedTextColor: textColor);
+      {required String title, required int value, required int groupValue, required void Function()? onChanged}) {
+    TextStyle ts = TextStyle(fontSize: 16, color: groupValue == value ? selectedTextColor : textColor);
     return Container(
         child: MyListTile(
-          title: Text(title, style:ts),
-          radio: groupValue==value,
-          onPressed: onChanged,
-        )
-    );
+      title: Text(title, style: ts),
+      radio: groupValue == value,
+      onPressed: onChanged,
+    ));
   }
 
   void _onRadioSelected(value) {
     selVal = value;
-    ref.read(environmentProvider).saveData(data,selVal);
+    ref.read(environmentProvider).saveData(data, selVal);
   }
 }
