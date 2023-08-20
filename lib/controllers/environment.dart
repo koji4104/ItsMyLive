@@ -42,7 +42,8 @@ class Environment {
 
   EnvData autostop_sec = EnvData(
     val: 0,
-    vals: IS_TEST ? [0, 120, 3600, 7200, 10800, 14400, 21600] : [0, 3600, 7200, 10800, 14400, 21600],
+    vals:
+        IS_TEST ? [0, 120, 3600, 7200, 10800, 14400, 21600] : [0, 3600, 7200, 10800, 14400, 21600],
     keys: IS_TEST
         ? ['Nonstop', '2 min', '1 hour', '2 hour', '3 hour', '4 hour', '6 hour']
         : ['Nonstop', '1 hour', '2 hour', '3 hour', '4 hour', '6 hour'],
@@ -200,6 +201,10 @@ class environmentNotifier extends ChangeNotifier {
       env.key3 = prefs.getString('key3') ?? '';
       env.url4 = prefs.getString('url4') ?? '';
       env.key4 = prefs.getString('key4') ?? '';
+
+      env.url1 = 'srt://10.221.58.48:3000';
+      env.key1 = '/';
+
       print('-- load() camera_height.val=${env.camera_height.val}');
     } on Exception catch (e) {
       print('-- load() e=' + e.toString());

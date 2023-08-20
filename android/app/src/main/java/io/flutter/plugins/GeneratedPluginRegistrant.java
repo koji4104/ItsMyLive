@@ -16,6 +16,11 @@ public final class GeneratedPluginRegistrant {
   private static final String TAG = "GeneratedPluginRegistrant";
   public static void registerWith(@NonNull FlutterEngine flutterEngine) {
     try {
+      flutterEngine.getPlugins().add(new video.api.flutter.livestream.ApiVideoLiveStreamPlugin());
+    } catch(Exception e) {
+      Log.e(TAG, "Error registering plugin apivideo_live_stream, video.api.flutter.livestream.ApiVideoLiveStreamPlugin", e);
+    }
+    try {
       flutterEngine.getPlugins().add(new com.ryanheise.audio_session.AudioSessionPlugin());
     } catch(Exception e) {
       Log.e(TAG, "Error registering plugin audio_session, com.ryanheise.audio_session.AudioSessionPlugin", e);
@@ -34,11 +39,6 @@ public final class GeneratedPluginRegistrant {
       flutterEngine.getPlugins().add(new io.flutter.plugins.flutter_plugin_android_lifecycle.FlutterAndroidLifecyclePlugin());
     } catch(Exception e) {
       Log.e(TAG, "Error registering plugin flutter_plugin_android_lifecycle, io.flutter.plugins.flutter_plugin_android_lifecycle.FlutterAndroidLifecyclePlugin", e);
-    }
-    try {
-      flutterEngine.getPlugins().add(new com.haishinkit.haishin_kit.HaishinKitPlugin());
-    } catch(Exception e) {
-      Log.e(TAG, "Error registering plugin haishin_kit, com.haishinkit.haishin_kit.HaishinKitPlugin", e);
     }
     try {
       flutterEngine.getPlugins().add(new com.github.rmtmckenzie.native_device_orientation.NativeDeviceOrientationPlugin());

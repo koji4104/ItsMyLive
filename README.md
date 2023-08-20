@@ -43,4 +43,5 @@ ffmpeg -re -y -i "rtmp://localhost:1935/live/live" -movflags faststart -c copy C
 
 ffmpeg\ffplay -i "rtmp://localhost:1935/live/live?mode=listener"
 
+ffplay -listen 1 -i rtmp://0.0.0.0:1935/s/streamKey
 

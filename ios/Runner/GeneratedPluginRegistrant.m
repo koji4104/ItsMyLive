@@ -6,6 +6,12 @@
 
 #import "GeneratedPluginRegistrant.h"
 
+#if __has_include(<apivideo_live_stream/ApiVideoLiveStreamPlugin.h>)
+#import <apivideo_live_stream/ApiVideoLiveStreamPlugin.h>
+#else
+@import apivideo_live_stream;
+#endif
+
 #if __has_include(<audio_session/AudioSessionPlugin.h>)
 #import <audio_session/AudioSessionPlugin.h>
 #else
@@ -22,12 +28,6 @@
 #import <camera_avfoundation/CameraPlugin.h>
 #else
 @import camera_avfoundation;
-#endif
-
-#if __has_include(<haishin_kit/HaishinKitPlugin.h>)
-#import <haishin_kit/HaishinKitPlugin.h>
-#else
-@import haishin_kit;
 #endif
 
 #if __has_include(<native_device_orientation/NativeDeviceOrientationPlugin.h>)
@@ -57,10 +57,10 @@
 @implementation GeneratedPluginRegistrant
 
 + (void)registerWithRegistry:(NSObject<FlutterPluginRegistry>*)registry {
+  [ApiVideoLiveStreamPlugin registerWithRegistrar:[registry registrarForPlugin:@"ApiVideoLiveStreamPlugin"]];
   [AudioSessionPlugin registerWithRegistrar:[registry registrarForPlugin:@"AudioSessionPlugin"]];
   [FLTBatteryPlusPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTBatteryPlusPlugin"]];
   [CameraPlugin registerWithRegistrar:[registry registrarForPlugin:@"CameraPlugin"]];
-  [HaishinKitPlugin registerWithRegistrar:[registry registrarForPlugin:@"HaishinKitPlugin"]];
   [NativeDeviceOrientationPlugin registerWithRegistrar:[registry registrarForPlugin:@"NativeDeviceOrientationPlugin"]];
   [FLTPathProviderPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTPathProviderPlugin"]];
   [PermissionHandlerPlugin registerWithRegistrar:[registry registrarForPlugin:@"PermissionHandlerPlugin"]];

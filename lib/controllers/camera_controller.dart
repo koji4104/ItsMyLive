@@ -2,6 +2,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter/material.dart';
 import '/models/camera_model.dart';
 
+/*
 import 'package:haishin_kit/audio_settings.dart';
 import 'package:haishin_kit/audio_source.dart';
 import 'package:haishin_kit/net_stream_drawable_texture.dart';
@@ -9,6 +10,7 @@ import 'package:haishin_kit/rtmp_connection.dart';
 import 'package:haishin_kit/rtmp_stream.dart';
 import 'package:haishin_kit/video_settings.dart';
 import 'package:haishin_kit/video_source.dart';
+*/
 import 'package:audio_session/audio_session.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -23,8 +25,8 @@ final stateProvider = ChangeNotifierProvider((ref) => StateNotifier(ref));
 class StateNotifier extends ChangeNotifier {
   StateData state = StateData();
   Timer? _timer;
-  RtmpConnection? _connection;
-  RtmpStream? _stream;
+  //RtmpConnection? _connection;
+  //RtmpStream? _stream;
   Environment env = new Environment();
 
   StateNotifier(ref) {
@@ -42,17 +44,17 @@ class StateNotifier extends ChangeNotifier {
       toConnecting();
       return;
     }
-    try {
-      if (_connection != null) _connection!.connect(env.getUrl());
-      toConnecting();
-    } catch (e) {
-      MyLog.err('${e.toString()}');
-    }
+    //try {
+    //  if (_connection != null) _connection!.connect(env.getUrl());
+    //  toConnecting();
+    //} catch (e) {
+    //  MyLog.err('${e.toString()}');
+    //}
   }
 
   void stop() {
     try {
-      if (_connection != null) _connection!.close();
+      //if (_connection != null) _connection!.close();
       toStop();
     } catch (e) {
       MyLog.err('${e.toString()}');
@@ -61,11 +63,11 @@ class StateNotifier extends ChangeNotifier {
 
   void reconnect() {
     try {
-      if (_connection != null) {
-        _connection!.connect(env.getUrl());
-        toRetrying();
-        MyLog.warn("Retry (${state.retry})");
-      }
+      //if (_connection != null) {
+      //  _connection!.connect(env.getUrl());
+      toRetrying();
+      MyLog.warn("Retry (${state.retry})");
+      //}
     } catch (e) {
       MyLog.err('${e.toString()}');
     }
@@ -120,10 +122,12 @@ class StateNotifier extends ChangeNotifier {
       avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.allowBluetooth,
     ));
 
-    if (_connection == null) {
-      print('-- initPlatformState() _connection create');
-      _connection = await RtmpConnection.create();
-    }
+    //if (_connection == null) {
+    //  print('-- initPlatformState() _connection create');
+    //  _connection = await RtmpConnection.create();
+    //}
+    /*
+
     if (_connection != null) {
       StreamSubscription _streamSubscription = _connection!.eventChannel.receiveBroadcastStream().listen((event) {
         String code = event["data"]["code"];
@@ -164,7 +168,7 @@ class StateNotifier extends ChangeNotifier {
         _stream = await RtmpStream.create(_connection!);
       }
       if (_stream != null) {
-        _stream!.audioSettings = AudioSettings(muted: false, bitrate: 128 * 1000);
+        _stream!.audioSettings = AudioSettings(bitrate: 128 * 1000);
         _stream!.videoSettings = VideoSettings(
           width: (env.camera_height.val * 16 / 9).toInt(),
           height: env.camera_height.val,
@@ -176,16 +180,18 @@ class StateNotifier extends ChangeNotifier {
         this.notifyListeners();
       }
     }
+    */
   }
 
   /// pos 0=back 1=front
   switchCamera(int pos) {
-    if (_stream != null) {
-      _stream!.attachVideo(VideoSource(position: pos == 0 ? CameraPosition.back : CameraPosition.front));
-    }
+    //if (_stream != null) {
+    //  _stream!.attachVideo(VideoSource(position: pos == 0 ? CameraPosition.back : CameraPosition.front));
+    //}
   }
 
   changeVideoSettings(Environment env) {
+/*
     if (_stream != null) {
       _stream!.videoSettings = VideoSettings(
         width: (env.camera_height.val * 16 / 9).toInt(),
@@ -193,8 +199,10 @@ class StateNotifier extends ChangeNotifier {
         bitrate: env.video_kbps.val * 1024,
       );
     }
+*/
   }
 
+  /*
   Widget getCameraWidget() {
     if (kIsWeb || _stream == null) {
       return Positioned(left: 0, top: 0, right: 0, bottom: 0, child: Container(color: Color(0xFF444444)));
@@ -202,6 +210,7 @@ class StateNotifier extends ChangeNotifier {
       return Center(child: NetStreamDrawableTexture(_stream));
     }
   }
+  */
 
   void onTimer(Timer timer) async {
     // Reconnect after publish

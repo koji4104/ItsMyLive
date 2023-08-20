@@ -8,6 +8,7 @@ import 'dart:async';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '/controllers/camera_controller.dart';
+import '/controllers/streampack_controller.dart';
 import '/models/camera_model.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'log_screen.dart';
@@ -29,7 +30,10 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
   @override
   Future init() async {
     print('-- CameraScreen.init()');
-    ref.read(stateProvider).initHaishinKit(env);
+
+    //ref.read(stateProvider).initHaishinKit(env);
+    ref.read(streampack).initController(env);
+
     WidgetsBinding.instance.addObserver(this);
     _timer = Timer.periodic(Duration(seconds: 1), onTimer);
   }
@@ -68,7 +72,10 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     subBuild(context, ref);
-    this._state = ref.watch(stateProvider).state;
+
+    //this._state = ref.watch(stateProvider).state;
+    this._state = ref.watch(streampack).state;
+
     bool _isSaver = _state.isSaver;
     return Scaffold(
       key: _scaffoldKey,
@@ -90,7 +97,7 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
               ),
             ),
 
-          if (_isSaver == false) _cameraWidget(context),
+          if (_isSaver == false) cameraWidget(context),
 
           // Start
           MyIconButton(
@@ -136,7 +143,9 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
                     old_camera_height != env.camera_height.val ||
                     old_video_fps != env.video_fps.val) {
                   print('-- change env');
-                  ref.read(stateProvider).changeVideoSettings(env);
+
+                  //ref.read(stateProvider).changeVideoSettings(env);
+                  ref.read(streampack).changeVideoSettings(env);
                 }
               },
             ),
@@ -162,7 +171,8 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
             left: 40.0,
             icon: Icon(Icons.dark_mode, color: Colors.white),
             onPressed: () {
-              ref.read(stateProvider).switchSaver();
+              //ref.read(stateProvider).switchSaver();
+              ref.read(streampack).switchSaver();
             },
           ),
         ]),
@@ -171,7 +181,7 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
   }
 
   /// Camera Widget
-  Widget _cameraWidget(BuildContext context) {
+  Widget cameraWidget(BuildContext context) {
     if (IS_TEST) {
       return Center(
         child: Transform.scale(
@@ -182,21 +192,25 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
         ),
       );
     }
-    return ref.read(stateProvider).getCameraWidget();
+    //return ref.read(stateProvider).getCameraWidget();
+    return ref.read(streampack).getCameraWidget();
   }
 
   /// Switch
   void onSwitchCamera() {
     int pos = env.camera_pos.val == 0 ? 1 : 0;
     ref.read(environmentProvider).saveData(env.camera_pos, pos);
-    ref.read(stateProvider).switchCamera(pos);
+
+    //ref.read(stateProvider).switchCamera(pos);
+    ref.read(streampack).switchCamera(pos);
   }
 
   /// onStart
   Future<bool> onStart() async {
     if (kIsWeb) {
       _batteryLevelStart = await _battery.batteryLevel;
-      ref.read(stateProvider).start(env);
+      //ref.read(stateProvider).start(env);
+      ref.read(streampack).start(env);
       return true;
     }
 
@@ -207,7 +221,8 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
 
     try {
       _batteryLevelStart = await _battery.batteryLevel;
-      ref.read(stateProvider).start(env);
+      //ref.read(stateProvider).start(env);
+      ref.read(streampack).start(env);
       MyLog.info("Start " + env.getUrl());
     } catch (e) {
       MyLog.err('${e.toString()}');
@@ -228,7 +243,8 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
         s += ' batt ${_batteryLevelStart}->${_batteryLevel}%';
       }
       MyLog.info(s);
-      ref.read(stateProvider).stop();
+      //ref.read(stateProvider).stop();
+      ref.read(streampack).stop();
     } on Exception catch (e) {
       MyLog.err('${e.toString()}');
     }
@@ -296,7 +312,10 @@ class StateWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     this.ref = ref;
-    this._state = ref.watch(stateProvider).state;
+
+    //this._state = ref.watch(stateProvider).state;
+    this._state = ref.watch(streampack).state;
+
     String str = ref.watch(stateWidgetProvider);
     Future.delayed(Duration.zero, () => init(context, ref));
     return Text(str, textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.white));
