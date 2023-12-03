@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Its my Live</string>
+	<string>It's my Live</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -31,9 +31,9 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Use itsmylive</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Use itsmylive</string>
+	<string>Use it's my live</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Use itsmylive</string>
+	<string>Use it's my live</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -56,5 +56,7 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
 </dict>
 </plist>

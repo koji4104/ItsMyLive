@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class SampleLocalizationsDelegate extends LocalizationsDelegate<Localized> {
   const SampleLocalizationsDelegate();
   @override
-  bool isSupported(Locale locale) => ['en','ja'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => ['en', 'ja'].contains(locale.languageCode);
   @override
   Future<Localized> load(Locale locale) async => Localized(locale);
   @override
@@ -15,7 +15,7 @@ class Localized {
   final Locale locale;
 
   static Localized of(BuildContext context) {
-    return Localizations.of (context, Localized)!;
+    return Localizations.of(context, Localized)!;
   }
 
   static Map<String, Map<String, String>> _localizedValues = {
@@ -35,11 +35,11 @@ class Localized {
     'ja': {
       'settings_title': '設定',
       'url_num': 'URL',
-      'url_num_desc':'URLを選んでください。',
+      'url_num_desc': 'URLを選んでください。',
       'video_kbps': 'ビットレート',
-      'video_kbps_desc': 'ビットレートを選んでください。',
+      'video_kbps_desc': '一度成功してからの切断が多いときはビットレートとカメラサイズを下げてください。',
       'video_fps': 'FPS',
-      'video_fps_desc': 'FPS（フレームレート）を選んでください。',
+      'video_fps_desc': 'フレームレートを選んでください。',
       'autostop_sec': '自動停止',
       'autostop_sec_desc': '自動的に停止します。バッテリー残量10%以下でも停止します。',
       'camera_height': 'カメラサイズ',
@@ -55,7 +55,6 @@ class Localized {
       else
         s = _localizedValues["en"]?[text];
     } on Exception catch (e) {}
-    return s!=null ? s : text;
+    return s != null ? s : text;
   }
 }
-

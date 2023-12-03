@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/constants.dart';
@@ -15,11 +14,14 @@ class EnvData {
       {required int this.val,
       required List<int> this.vals,
       required List<String> this.keys,
-      required String this.name}) {}
+      required String this.name}) {
+    set(val);
+  }
 
-  set(int? v) {
+  void set(int? v) {
     if (v == null || vals.length == 0 || keys.length == 0) return;
-    val = vals[0];
+    val = vals[vals.length - 1];
+    key = keys[keys.length - 1];
     for (var i = 0; i < vals.length; i++) {
       if (v <= vals[i]) {
         val = vals[i];
@@ -32,28 +34,26 @@ class EnvData {
 
 /// Environment
 class Environment {
-  /// mode 1=rtmp (1 only)
-  EnvData publish_mode = EnvData(
+  EnvData stream_mode = EnvData(
     val: 1,
     vals: [1, 2],
-    keys: ['rtmp', ''],
-    name: 'publish_mode',
+    keys: ['rtmp', 'srt'],
+    name: 'stream_mode',
   );
 
   EnvData autostop_sec = EnvData(
     val: 0,
-    vals:
-        IS_TEST ? [0, 120, 3600, 7200, 10800, 14400, 21600] : [0, 3600, 7200, 10800, 14400, 21600],
+    vals: IS_TEST ? [0, 120, 3600] : [0, 3600, 7200, 14400, 21600],
     keys: IS_TEST
-        ? ['Nonstop', '2 min', '1 hour', '2 hour', '3 hour', '4 hour', '6 hour']
-        : ['Nonstop', '1 hour', '2 hour', '3 hour', '4 hour', '6 hour'],
+        ? ['Nonstop', '2 min', '1 hour']
+        : ['Nonstop', '1 hour', '2 hour', '4 hour', '6 hour'],
     name: 'autostop_sec',
   );
 
   EnvData video_fps = EnvData(
     val: 30,
-    vals: [24, 25, 30],
-    keys: ['24', '25', '30'],
+    vals: [24, 25, 30, 60],
+    keys: ['24', '25', '30', '60'],
     name: 'video_fps',
   );
 
@@ -71,6 +71,13 @@ class Environment {
     name: 'camera_height',
   );
 
+  int getCameraWidth() {
+    if (camera_height.val == 480)
+      return 854;
+    else
+      return (camera_height.val * 16.0 / 9.0).toInt();
+  }
+
   // 0=back, 1=Front(Face)
   EnvData camera_pos = EnvData(
     val: 0,
@@ -79,6 +86,7 @@ class Environment {
     name: 'camera_pos',
   );
 
+  /// Selected Url 1-4 (Not 0)
   EnvData url_num = EnvData(
     val: 1,
     vals: [1, 2, 3, 4],
@@ -191,7 +199,6 @@ class environmentNotifier extends ChangeNotifier {
       _loadSub(prefs, env.autostop_sec);
       _loadSub(prefs, env.camera_height);
       _loadSub(prefs, env.camera_pos);
-      _loadSub(prefs, env.publish_mode);
 
       env.url1 = prefs.getString('url1') ?? '';
       env.key1 = prefs.getString('key1') ?? '';
@@ -202,12 +209,16 @@ class environmentNotifier extends ChangeNotifier {
       env.url4 = prefs.getString('url4') ?? '';
       env.key4 = prefs.getString('key4') ?? '';
 
-      env.url1 = 'srt://10.221.58.48:3000';
-      env.key1 = '/';
-
-      print('-- load() camera_height.val=${env.camera_height.val}');
+      if (IS_TEST) {
+        env.url_num.val = 1;
+        env.url1 = "rtmp://10.221.58.34/live";
+        env.key1 = "live";
+        print('-- load() IS_TEST');
+      } else {
+        print('-- load() camera_height.val=${env.camera_height.val}');
+      }
     } on Exception catch (e) {
-      print('-- load() e=' + e.toString());
+      print('-- load() err=' + e.toString());
     }
   }
 
@@ -215,29 +226,18 @@ class environmentNotifier extends ChangeNotifier {
     data.set(prefs.getInt(data.name) ?? data.val);
   }
 
-  Future saveData(EnvData data, int newVal) async {
+  Future saveData(String name, int newVal) async {
+    EnvData data = getData(name);
     if (data.val == newVal) return;
-    roundVal(data, newVal);
+    data.set(newVal);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(data.name, data.val);
     this.notifyListeners();
   }
 
-  void roundVal(EnvData data, int newVal) {
-    for (var i = 0; i < data.vals.length; i++) {
-      if (newVal <= data.vals[i]) {
-        getData(data).val = data.vals[i];
-        getData(data).key = data.keys[i];
-        return;
-      }
-    }
-    getData(data).val = data.vals[0];
-    getData(data).key = data.keys[0];
-  }
-
-  EnvData getData(EnvData data) {
-    EnvData ret = env.publish_mode;
-    switch (data.name) {
+  EnvData getData(String name) {
+    EnvData ret = env.stream_mode;
+    switch (name) {
       case 'video_fps':
         ret = env.video_fps;
         break;
@@ -252,9 +252,6 @@ class environmentNotifier extends ChangeNotifier {
         break;
       case 'camera_pos':
         ret = env.camera_pos;
-        break;
-      case 'publish_mode':
-        ret = env.publish_mode;
         break;
       case 'url_num':
         ret = env.url_num;

@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import '/common.dart';
+import '/commons/common.dart';
 
 class MyLogData {
   String time = '';
@@ -69,7 +69,7 @@ class MyLog {
     final String path = '${appdir.path}/logs/$_fname';
 
     // length byte 100kb
-    if (await File(path).exists() && File(path).lengthSync() > 100 * 1024) {
+    if (await File(path).exists() && File(path).lengthSync() > 200 * 1024) {
       if (await File(path + '.1').exists()) File(path + '.1').deleteSync();
       File(path).renameSync(path + '.1');
       File(path).deleteSync();
@@ -188,7 +188,7 @@ class LogScreen extends ConsumerWidget {
   Widget getText(String s) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 4),
-      child: Text(s, style: TextStyle(fontSize: 14, color: Colors.white)),
+      child: Text(s, style: TextStyle(fontSize: 13, color: Colors.white)),
     );
   }
 }

@@ -1,9 +1,12 @@
 name: itsmylive
 description: Flutter rtmp.
-version: 0.9.0
+version: 2.0.0
 
+# flutter dart
+# 3.13.9  3.1.5   2023/10/26
+# 3.3.0   2.18.0  2022/8/31
 environment:
-  sdk: ">=2.17.5 <3.0.0"
+  sdk: ">=2.18.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -11,29 +14,33 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
-  cupertino_icons: ^1.0.4
-  camera: ^0.10.5+3
-  intl: ^0.17.0
-  battery_plus: ^2.1.0
+  cupertino_icons: ^1.0.6
+  camera: ^0.10.5+5
+  # intl ios 0.17.0 droid 0.18.1
+  intl: ^0.18.1
+  battery_plus: ^4.0.2
   path_provider: ^2.0.8
-  flutter_native_splash: ^1.3.1
-  hooks_riverpod: ^2.0.2
-  shared_preferences: ^2.0.13
-  flutter_lints: ^2.0.0
-
-  native_device_orientation: ^1.1.4
-  audio_session: any
-  permission_handler: ^9.0.2
-  #haishin_kit: ^0.11.0
-
-  apivideo_live_stream: ^1.1.2
+  flutter_native_splash: ^2.3.5
+  hooks_riverpod: ^2.3.10
+  shared_preferences: ^2.2.2
+  flutter_lints: ^2.0.3
+  audio_session: ^0.1.18
+  permission_handler: ^11.0.1
+  network_info_plus: ^4.1.0
+  package_info_plus: ^3.0.2
+  mylive_libraly:
+    path: ../mylive_libraly
 
 dev_dependencies:
+  integration_test:
+    sdk: flutter
   flutter_test:
     sdk: flutter
+  test:
 
 flutter:
   uses-material-design: true
   assets:
+    - lib/assets/appicon.png
     - lib/assets/sample.png
 

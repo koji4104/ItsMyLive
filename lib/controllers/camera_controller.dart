@@ -1,33 +1,26 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter/material.dart';
 import '/models/camera_model.dart';
-
-/*
-import 'package:haishin_kit/audio_settings.dart';
-import 'package:haishin_kit/audio_source.dart';
-import 'package:haishin_kit/net_stream_drawable_texture.dart';
-import 'package:haishin_kit/rtmp_connection.dart';
-import 'package:haishin_kit/rtmp_stream.dart';
-import 'package:haishin_kit/video_settings.dart';
-import 'package:haishin_kit/video_source.dart';
-*/
-import 'package:audio_session/audio_session.dart';
 import 'package:permission_handler/permission_handler.dart';
-
+import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '/constants.dart';
 import '/screens/log_screen.dart';
 import '/controllers/environment.dart';
 import 'dart:async';
+import 'package:mylive_libraly/mylive_libraly.dart';
+import 'package:network_info_plus/network_info_plus.dart';
 
 final stateProvider = ChangeNotifierProvider((ref) => StateNotifier(ref));
 
 class StateNotifier extends ChangeNotifier {
   StateData state = StateData();
   Timer? _timer;
-  //RtmpConnection? _connection;
-  //RtmpStream? _stream;
   Environment env = new Environment();
+  MyLiveController _controller = MyLiveController();
+
+  String wifiIPv4 = "";
+  String wifiIPv6 = "";
 
   StateNotifier(ref) {
     _timer = Timer.periodic(Duration(seconds: 1), onTimer);
@@ -38,195 +31,180 @@ class StateNotifier extends ChangeNotifier {
     if (_timer != null) _timer!.cancel();
   }
 
+  Future<void> initController(Environment env) async {
+    if (kIsWeb) return;
+    this.env = env;
+
+    try {
+      wifiIPv4 = await NetworkInfo().getWifiIP() ?? "";
+      print("-- IPv4=${wifiIPv4}");
+    } catch (e) {}
+    try {
+      wifiIPv6 = await NetworkInfo().getWifiIPv6() ?? "";
+      print("-- IPv6=${wifiIPv6}");
+      if (wifiIPv6.contains("fe80:")) wifiIPv6 = "";
+    } catch (e) {}
+
+    try {
+      await Permission.camera.request();
+      await Permission.microphone.request();
+    } catch (e) {
+      print('-- initialize.Permission error');
+    }
+
+    var v = MyLiveVideoConfig(
+      bitrate: env.video_kbps.val * 1000,
+      fps: env.video_fps.val,
+      width: env.getCameraWidth(),
+      height: env.camera_height.val,
+    );
+    var a = MyLiveAudioConfig(
+      bitrate: 128 * 1000,
+      sampleRate: 44100,
+    );
+    _controller
+        .initialize(
+      videoConfig: v,
+      audioConfig: a,
+      cameraPos: 0,
+      url: env.getUrl(),
+      key: env.getKey(),
+      onConnected: () {
+        print('-- onConnected');
+        toStreaming();
+      },
+      onDisconnected: (message) {
+        print('-- onDisconnected: $message');
+      },
+      onFailed: (error) {
+        print('-- onFailed: $error');
+      },
+      onError: (error) {
+        print('-- onError: code=${error.code} message=${error.message}');
+      },
+    )
+        .then((_) {
+      this.notifyListeners();
+    }).catchError((e) {
+      print('---- initialize catchError ${e.toString()}');
+    });
+  }
+
   void start(Environment env) {
     this.env = env;
     if (kIsWeb) {
       toConnecting();
       return;
     }
-    //try {
-    //  if (_connection != null) _connection!.connect(env.getUrl());
-    //  toConnecting();
-    //} catch (e) {
-    //  MyLog.err('${e.toString()}');
-    //}
+    try {
+      _controller.startStream();
+      toConnecting();
+    } catch (e) {
+      MyLog.err('-- startStream ${e.toString()}');
+    }
   }
 
   void stop() {
     try {
-      //if (_connection != null) _connection!.close();
-      toStop();
+      _controller.stopStream();
+      toStoped();
     } catch (e) {
       MyLog.err('${e.toString()}');
     }
   }
 
-  void reconnect() {
-    try {
-      //if (_connection != null) {
-      //  _connection!.connect(env.getUrl());
-      toRetrying();
-      MyLog.warn("Retry (${state.retry})");
-      //}
-    } catch (e) {
-      MyLog.err('${e.toString()}');
-    }
-  }
-
-  toStop() {
-    state.state = 0;
+  toStoped() {
+    state.state = MyState.stopped;
     state.retry = 0;
-    state.publishStartedTime = null;
-    state.connectStartedTime = null;
+    state.streamTime = null;
+    state.connectTime = null;
     this.notifyListeners();
   }
 
-  toRunning() {
-    state.state = 1;
+  toStreaming() {
+    state.state = MyState.streaming;
     state.retry = 0;
-    state.publishStartedTime = DateTime.now();
-    state.connectStartedTime = null;
+    state.streamTime = DateTime.now();
+    state.connectTime = null;
     this.notifyListeners();
   }
 
   toConnecting() {
-    state.state = 2;
+    state.state = MyState.connecting;
     state.retry = 0;
-    state.publishStartedTime = null;
-    state.connectStartedTime = DateTime.now();
+    state.streamTime = null;
+    state.connectTime = DateTime.now();
     this.notifyListeners();
   }
 
   toRetrying() {
-    state.state = 2;
+    state.state = MyState.connecting;
     state.retry += 1;
-    state.connectStartedTime = DateTime.now();
+    //state.publishTime = null;
+    state.connectTime = DateTime.now();
     this.notifyListeners();
   }
 
-  switchSaver() {
-    state.isSaver = !state.isSaver;
+  void switchDispInfo() {
+    state.isDispInfo = !state.isDispInfo;
     this.notifyListeners();
-  }
-
-  Future<void> initHaishinKit(Environment env) async {
-    if (kIsWeb || IS_TEST) return;
-    this.env = env;
-    await Permission.camera.request();
-    await Permission.microphone.request();
-
-    // Set up AVAudioSession for iOS.
-    final session = await AudioSession.instance;
-    await session.configure(const AudioSessionConfiguration(
-      avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
-      avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.allowBluetooth,
-    ));
-
-    //if (_connection == null) {
-    //  print('-- initPlatformState() _connection create');
-    //  _connection = await RtmpConnection.create();
-    //}
-    /*
-
-    if (_connection != null) {
-      StreamSubscription _streamSubscription = _connection!.eventChannel.receiveBroadcastStream().listen((event) {
-        String code = event["data"]["code"];
-        String desc = event["data"]["description"];
-        String s = (desc.length > 0) ? '${code} (${desc})' : '${code}';
-        MyLog.debug(s);
-
-        switch (event["data"]["code"]) {
-          case 'NetConnection.Connect.Success':
-            if (_stream != null) _stream!.publish(env.getKey());
-            break;
-          case 'NetConnection.Connect.Closed':
-            if (state.publishStartedTime != null) {
-              reconnect();
-            }
-            break;
-          case 'NetConnection.Connect.Failed':
-          case 'NetConnection.Call.BadVersion':
-          case 'NetConnection.Call.Failed':
-          case 'NetConnection.Call.Prohibited':
-          case 'NetConnection.Connect.AppShutdown':
-          case 'NetConnection.Connect.IdleTimeOut':
-          case 'NetConnection.Connect.InvalidApp':
-          case 'NetConnection.Connect.NetworkChange':
-          case 'NetConnection.Connect.Rejected':
-            break;
-          case 'NetStream.Publish.BadName':
-            if (_stream != null) _stream!.publish(env.getKey());
-            break;
-          case 'NetStream.Publish.Start':
-            toRunning();
-            break;
-        }
-      });
-
-      if (_stream == null) {
-        print('-- initPlatformState() _stream');
-        _stream = await RtmpStream.create(_connection!);
-      }
-      if (_stream != null) {
-        _stream!.audioSettings = AudioSettings(bitrate: 128 * 1000);
-        _stream!.videoSettings = VideoSettings(
-          width: (env.camera_height.val * 16 / 9).toInt(),
-          height: env.camera_height.val,
-          bitrate: env.video_kbps.val * 1024,
-        );
-        _stream!.attachAudio(AudioSource());
-        _stream!
-            .attachVideo(VideoSource(position: env.camera_pos.val == 0 ? CameraPosition.back : CameraPosition.front));
-        this.notifyListeners();
-      }
-    }
-    */
   }
 
   /// pos 0=back 1=front
-  switchCamera(int pos) {
-    //if (_stream != null) {
-    //  _stream!.attachVideo(VideoSource(position: pos == 0 ? CameraPosition.back : CameraPosition.front));
-    //}
+  void switchCamera(int pos) {
+    _controller.setCameraPos(pos);
   }
 
-  changeVideoSettings(Environment env) {
-/*
-    if (_stream != null) {
-      _stream!.videoSettings = VideoSettings(
-        width: (env.camera_height.val * 16 / 9).toInt(),
-        height: env.camera_height.val,
-        bitrate: env.video_kbps.val * 1024,
-      );
-    }
-*/
-  }
-
-  /*
   Widget getCameraWidget() {
-    if (kIsWeb || _stream == null) {
-      return Positioned(left: 0, top: 0, right: 0, bottom: 0, child: Container(color: Color(0xFF444444)));
+    if (kIsWeb || _controller == null) {
+      return Positioned(
+          left: 0, top: 0, right: 0, bottom: 0, child: Container(color: Color(0xFF444488)));
     } else {
-      return Center(child: NetStreamDrawableTexture(_stream));
+      return Center(child: MyLivePreview(controller: _controller));
     }
   }
-  */
 
+  MyState _oldState = MyState.stopped;
+
+  /// Timer
   void onTimer(Timer timer) async {
-    // Reconnect after publish
-    if (state.connectStartedTime != null && state.publishStartedTime != null && state.retry >= 1) {
-      Duration dur = DateTime.now().difference(state.connectStartedTime!);
-      if (dur.inSeconds >= (15 + state.retry)) {
-        reconnect();
-      }
-    }
-
-    // Timeout on first connection
-    if (state.connectStartedTime != null && state.publishStartedTime == null && state.state == 2 && state.retry == 0) {
-      Duration dur = DateTime.now().difference(state.connectStartedTime!);
+    // Connection timed out
+    if (state.connectTime != null &&
+        state.streamTime == null &&
+        state.state == MyState.connecting &&
+        state.retry == 0) {
+      Duration dur = DateTime.now().difference(state.connectTime!);
       if (dur.inSeconds >= 30) {
         MyLog.info('Connection timed out');
         stop();
+      }
+    }
+
+    if (state.state != MyState.stopped) {
+      bool isStreaming = await _controller.isStreaming();
+      if (state.streamTime != null) {
+        if (isStreaming == false) {
+          // 30x 300+465 12min
+          if (state.retry > 30) {
+            toStoped();
+          } else if (state.retry == 0) {
+            toRetrying();
+          } else if (state.retry >= 1 && state.connectSec >= (5 + state.retry)) {
+            if (state.retry == 1) MyLog.warn('Retried');
+            _controller.startStream();
+            toRetrying();
+          }
+        }
+
+        // Log
+        if (_oldState != state.state) {
+          print("-- State ${_oldState} -> ${state.state}");
+          _oldState = state.state;
+        }
+      }
+
+      if (state.streamTime == null && state.state != MyState.streaming && isStreaming == true) {
+        toStreaming();
       }
     }
   }

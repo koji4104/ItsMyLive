@@ -1,47 +1,53 @@
 # It's my Live
 
-## :movie_camera: Features
+## :blue_book: Features
 
 **It's my Live** is a live distribution application.
 
-## YouTube
+## :blue_book: YouTube
 <img src='img/3.png' width=50%>
 
 Enter URL and KEY in App. Note that the KEY changes each time the button is pressed.
 
-## AWS MediaLive
+## :blue_book: AWS MediaLive
 
-e.g. rtmp://xxxx/test/abcd
-URL = rtmp://xxxx/test
+e.g. rtmp://xxxx/test/abcd  
+URL = rtmp://xxxx/test  
 KEY = abcd
 
-## Nginx
+## :blue_book: Nginx
 
-start nginx
-nginx -s quit
-
-URL = rtmp://xxxx:1935/live
+URL = rtmp://(pc_ip):1935/live
 KEY = live
 
-### Modify the conf file
-vi /etc/nginx/nginx.conf
+**Modify nginx.conf file**
+/etc/nginx/nginx.conf
 
-### Add the following
+```
 rtmp {
-    server {
-        listen 1935;
-        chunk_size 4096;
-        access_log /var/log/rtmp_access.log;
-        application live { # name is live
-            live on;
-            record off;
-        }
+  server {
+    listen 1935;
+    chunk_size 4096;
+    access_log /var/log/rtmp_access.log;
+    application live { 
+        live on;
+        record off;
     }
+  }
 }
+```
 
-ffmpeg -re -y -i "rtmp://localhost:1935/live/live" -movflags faststart -c copy C:\dev\tools\ffmpeg\rec.mp4
+## :blue_book: Test PC and ffplay
+### rtmp
+- PC (need nginx)
+  ffplay -i "rtmp://0.0.0.0:1935/live/live"
+- It's my Live
+  url rtmp://(pc_ip):1935/live
+  key live
 
-ffmpeg\ffplay -i "rtmp://localhost:1935/live/live?mode=listener"
-
-ffplay -listen 1 -i rtmp://0.0.0.0:1935/s/streamKey
+### srt
+- PC 
+  ffplay -i "srt://0.0.0.0:5000?mode=listener"
+- It's my Live
+  url srt://(pc_ip):5000
 

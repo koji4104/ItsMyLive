@@ -1,22 +1,18 @@
 import 'package:flutter/material.dart';
 import 'settings_screen.dart';
-
 import 'package:native_device_orientation/native_device_orientation.dart';
 import 'dart:math';
-
 import 'dart:async';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '/controllers/camera_controller.dart';
-import '/controllers/streampack_controller.dart';
 import '/models/camera_model.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'log_screen.dart';
-import '/common.dart';
 import '/controllers/environment.dart';
 import '/constants.dart';
-import 'widgets.dart';
-import 'base_screen.dart';
+import '/commons/widgets.dart';
+import '/commons/base_screen.dart';
 
 class CameraScreen extends BaseScreen with WidgetsBindingObserver {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -30,10 +26,7 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
   @override
   Future init() async {
     print('-- CameraScreen.init()');
-
-    //ref.read(stateProvider).initHaishinKit(env);
-    ref.read(streampack).initController(env);
-
+    ref.read(stateProvider).initController(env);
     WidgetsBinding.instance.addObserver(this);
     _timer = Timer.periodic(Duration(seconds: 1), onTimer);
   }
@@ -49,20 +42,18 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
       case AppLifecycleState.inactive:
         print('-- inactive');
         break;
-      case AppLifecycleState.paused:
-        print('-- paused');
-        break;
       case AppLifecycleState.resumed:
         print('-- resumed');
+        break;
+      case AppLifecycleState.paused:
+        print('-- paused');
         break;
       case AppLifecycleState.detached:
         print('-- detached');
         break;
     }
     if (state != null) {
-      if (state == AppLifecycleState.inactive ||
-          state == AppLifecycleState.paused ||
-          state == AppLifecycleState.detached) {
+      if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
         MyLog.warn("App stopped or background");
         onStop();
       }
@@ -71,90 +62,68 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    subBuild(context, ref);
-
-    //this._state = ref.watch(stateProvider).state;
-    this._state = ref.watch(streampack).state;
-
-    bool _isSaver = _state.isSaver;
+    super.build(context, ref);
+    this._state = ref.watch(stateProvider).state;
     return Scaffold(
       key: _scaffoldKey,
       extendBody: true,
       body: Container(
         margin: edge.homebarEdge,
         child: Stack(children: <Widget>[
-          // screen saver
-          if (_isSaver)
-            Positioned(
-              top: 0,
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: TextButton(
-                child: Text(''),
-                style: ButtonStyle(backgroundColor: MaterialStateProperty.all<Color>(Colors.black)),
-                onPressed: () {},
-              ),
-            ),
-
-          if (_isSaver == false) cameraWidget(context),
+          cameraWidget(context),
 
           // Start
           MyIconButton(
+            key: Key('start'),
             top: 0.0,
             bottom: 0.0,
             right: 40,
-            icon: Icon(Icons.lens_rounded,
-                color: _state.state == 2
-                    ? Colors.blueAccent
-                    : _state.state == 1
-                        ? Colors.redAccent
-                        : Colors.white),
+            icon: Icon(Icons.lens_rounded, color: _state.stateColor),
             onPressed: () {
-              _state.state == 0 ? onStart() : onStop();
+              _state.state == MyState.stopped ? onStart() : onStop();
             },
           ),
 
           // Camera Switch
-          if (_isSaver == false)
-            MyIconButton(
-              bottom: 40.0,
-              right: 40.0,
-              icon: Icon(Icons.autorenew, color: Colors.white),
-              onPressed: () => onSwitchCamera(),
-            ),
+          MyIconButton(
+            bottom: 40.0,
+            right: 40.0,
+            icon: Icon(Icons.autorenew, color: Colors.white),
+            onPressed: () => onSwitchCamera(),
+          ),
 
           // Settings
-          if (_isSaver == false)
-            MyIconButton(
-              top: 50.0,
-              left: 40.0,
-              icon: Icon(Icons.settings, color: Colors.white),
-              onPressed: () async {
-                int old_video_kbps = env.video_kbps.val;
-                int old_camera_height = env.camera_height.val;
-                int old_video_fps = env.video_fps.val;
+          MyIconButton(
+            top: 50.0,
+            left: 40.0,
+            icon: Icon(Icons.settings, color: Colors.white),
+            onPressed: () async {
+              int old_video_kbps = env.video_kbps.val;
+              int old_camera_height = env.camera_height.val;
+              int old_video_fps = env.video_fps.val;
+              String old_url = env.getUrl();
+              String old_key = env.getKey();
 
-                await Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => SettingsScreen(),
-                ));
+              await Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => SettingsScreen(),
+              ));
 
-                if (old_video_kbps != env.video_kbps.val ||
-                    old_camera_height != env.camera_height.val ||
-                    old_video_fps != env.video_fps.val) {
-                  print('-- change env');
-
-                  //ref.read(stateProvider).changeVideoSettings(env);
-                  ref.read(streampack).changeVideoSettings(env);
-                }
-              },
-            ),
+              if (old_video_kbps != env.video_kbps.val ||
+                  old_camera_height != env.camera_height.val ||
+                  old_video_fps != env.video_fps.val ||
+                  old_url != env.getUrl() ||
+                  old_key != env.getKey()) {
+                print('-- change env');
+                ref.read(stateProvider).initController(env);
+              }
+            },
+          ),
 
           // State
           Positioned(
             top: 60,
-            left: edge.width / 2 - 80,
-            right: edge.width / 2 - 80,
+            left: edge.width / 2 - 95,
+            right: edge.width / 2 - 95,
             child: Container(
               padding: EdgeInsets.fromLTRB(10, 8, 10, 8),
               decoration: BoxDecoration(
@@ -165,14 +134,31 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
             ),
           ),
 
-          // Black Screen
+          // State (Info)
+          if (_state.isDispInfo)
+            Positioned(
+              bottom: 30,
+              left: 100.0,
+              right: 100.0,
+              height: 90.0,
+              child: Container(
+                padding: EdgeInsets.fromLTRB(4, 2, 4, 2),
+                alignment: Alignment.centerLeft,
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: getInfo(),
+              ),
+            ),
+
+          // Info
           MyIconButton(
             bottom: 40.0,
             left: 40.0,
-            icon: Icon(Icons.dark_mode, color: Colors.white),
+            icon: Icon(Icons.info_outline, color: Colors.white),
             onPressed: () {
-              //ref.read(stateProvider).switchSaver();
-              ref.read(streampack).switchSaver();
+              ref.read(stateProvider).switchDispInfo();
             },
           ),
         ]),
@@ -182,7 +168,7 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
 
   /// Camera Widget
   Widget cameraWidget(BuildContext context) {
-    if (IS_TEST) {
+    if (kIsWeb) {
       return Center(
         child: Transform.scale(
           scale: 4.1,
@@ -192,25 +178,21 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
         ),
       );
     }
-    //return ref.read(stateProvider).getCameraWidget();
-    return ref.read(streampack).getCameraWidget();
+    return ref.read(stateProvider).getCameraWidget();
   }
 
   /// Switch
   void onSwitchCamera() {
     int pos = env.camera_pos.val == 0 ? 1 : 0;
-    ref.read(environmentProvider).saveData(env.camera_pos, pos);
-
-    //ref.read(stateProvider).switchCamera(pos);
-    ref.read(streampack).switchCamera(pos);
+    ref.read(environmentProvider).saveData(env.camera_pos.name, pos);
+    ref.read(stateProvider).switchCamera(pos);
   }
 
   /// onStart
   Future<bool> onStart() async {
     if (kIsWeb) {
       _batteryLevelStart = await _battery.batteryLevel;
-      //ref.read(stateProvider).start(env);
-      ref.read(streampack).start(env);
+      ref.read(stateProvider).start(env);
       return true;
     }
 
@@ -221,8 +203,7 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
 
     try {
       _batteryLevelStart = await _battery.batteryLevel;
-      //ref.read(stateProvider).start(env);
-      ref.read(streampack).start(env);
+      ref.read(stateProvider).start(env);
       MyLog.info("Start " + env.getUrl());
     } catch (e) {
       MyLog.err('${e.toString()}');
@@ -235,16 +216,12 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
     print('-- onStop');
     try {
       String s = 'Stop';
-      if (_state.publishStartedTime != null) {
-        Duration dur = DateTime.now().difference(_state.publishStartedTime!);
-        if (dur.inMinutes > 0) s += ' ${dur.inMinutes}min';
-      }
+      if (_state.streamTimeString != "") s += " " + _state.streamTimeString;
       if (_batteryLevelStart - _batteryLevel > 0) {
         s += ' batt ${_batteryLevelStart}->${_batteryLevel}%';
       }
       MyLog.info(s);
-      //ref.read(stateProvider).stop();
-      ref.read(streampack).stop();
+      ref.read(stateProvider).stop();
     } on Exception catch (e) {
       MyLog.err('${e.toString()}');
     }
@@ -253,10 +230,9 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
   /// Timer
   void onTimer(Timer timer) async {
     if (kIsWeb) return;
-
     // Autostop
-    if (_state.state == 1 && _state.publishStartedTime != null) {
-      Duration dur = DateTime.now().difference(_state.publishStartedTime!);
+    if (_state.state == MyState.streaming && _state.streamTime != null) {
+      Duration dur = DateTime.now().difference(_state.streamTime!);
       if (env.autostop_sec.val > 0 && dur.inSeconds > env.autostop_sec.val) {
         MyLog.info("Autostop by settings");
         onStop();
@@ -265,7 +241,7 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
     }
 
     // check battery (every 1min)
-    if (_state.state == 1 && DateTime.now().second == 0) {
+    if (_state.state == MyState.streaming && DateTime.now().second == 0) {
       this._batteryLevel = await _battery.batteryLevel;
       if (this._batteryLevel < 10) {
         await MyLog.warn("Low battery");
@@ -273,6 +249,17 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
         return;
       }
     }
+  }
+
+  Widget getInfo() {
+    String str = env.getUrl();
+    if (str.length == 0) str = "URL is empty";
+    str += "\r\n${env.getCameraWidth()}x${env.camera_height.val}";
+    str += " ${env.video_kbps.val}kbps";
+    str += " ${env.video_fps.val}fps";
+    if (ref.read(stateProvider).wifiIPv4 != "") str += "\r\nIP ${ref.read(stateProvider).wifiIPv4}";
+    if (ref.read(stateProvider).wifiIPv6 != "") str += "\r\nIPv6 ${ref.read(stateProvider).wifiIPv6}";
+    return Text(str, textAlign: TextAlign.left, style: TextStyle(fontSize: 12, color: Colors.white));
   }
 
   void showSnackBar(String msg) {
@@ -297,7 +284,9 @@ class StateWidget extends ConsumerWidget {
 
   void init(BuildContext context, WidgetRef ref) {
     if (_timer == null) {
-      _timer = Timer.periodic(Duration(seconds: 1), onTimer);
+      Future.delayed(Duration(seconds: 1), () {
+        _timer = Timer.periodic(Duration(seconds: 1), onTimer);
+      });
     }
   }
 
@@ -312,40 +301,35 @@ class StateWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     this.ref = ref;
-
-    //this._state = ref.watch(stateProvider).state;
-    this._state = ref.watch(streampack).state;
-
+    this._state = ref.watch(stateProvider).state;
     String str = ref.watch(stateWidgetProvider);
     Future.delayed(Duration.zero, () => init(context, ref));
     return Text(str, textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.white));
   }
 
+  /// every second
   void onTimer(Timer timer) async {
-    String str = 'Stop';
-    if (_state.state == 2) {
-      str = (_state.retry > 0) ? 'Retry (${_state.retry})' : 'Connecting';
-      if (_state.connectStartedTime != null) {
-        Duration dur = DateTime.now().difference(_state.connectStartedTime!);
-        if (dur.inSeconds >= 0) str += ' ${dur.inSeconds}s';
+    try {
+      String str = 'Stop';
+      if (_state.state == MyState.connecting) {
+        str = 'Connecting';
+        if (_state.retry > 0) {
+          str = 'Retrying ${_state.retry}x';
+        }
+        if (_state.connectTime != null) {
+          Duration dur = DateTime.now().difference(_state.connectTime!);
+          if (dur.inSeconds >= 0) str += ' ${dur.inSeconds}s';
+        }
+      } else if (_state.state == MyState.streaming) {
+        str = _state.streamTimeString;
       }
-    } else if (_state.state == 1) {
-      Duration dur = DateTime.now().difference(_state.publishStartedTime!);
-      str = dur2str(dur);
+      if (_oldStr != str) {
+        _oldStr = str;
+        ref.read(stateWidgetProvider.state).state = str;
+      }
+    } catch (e) {
+      print('-- onTimer err=${e.toString()}');
     }
-    if (_oldStr != str) {
-      _oldStr = str;
-      ref.read(stateWidgetProvider.state).state = str;
-    }
-  }
-
-  /// 01:00:00
-  String dur2str(Duration dur) {
-    String s = "";
-    if (dur.inHours > 0) s += dur.inHours.toString() + ':';
-    s += dur.inMinutes.remainder(60).toString().padLeft(2, '0') + ':';
-    s += dur.inSeconds.remainder(60).toString().padLeft(2, '0');
-    return s;
   }
 }
 
@@ -356,23 +340,24 @@ class OrientationCamera extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NativeDeviceOrientationReader(
-        useSensor: true,
-        builder: (context) {
-          double angle = 0.0;
-          switch (NativeDeviceOrientationReader.orientation(context)) {
-            case NativeDeviceOrientation.landscapeRight:
-              angle = pi * 1 / 2;
-              break;
-            case NativeDeviceOrientation.landscapeLeft:
-              angle = pi * 3 / 2;
-              break;
-            case NativeDeviceOrientation.portraitDown:
-              angle = pi * 2 / 2;
-              break;
-            default:
-              break;
-          }
-          return Transform.rotate(angle: angle, child: child);
-        });
+      useSensor: true,
+      builder: (context) {
+        double angle = 0.0;
+        switch (NativeDeviceOrientationReader.orientation(context)) {
+          case NativeDeviceOrientation.landscapeRight:
+            angle = pi * 1 / 2;
+            break;
+          case NativeDeviceOrientation.landscapeLeft:
+            angle = pi * 3 / 2;
+            break;
+          case NativeDeviceOrientation.portraitDown:
+            angle = pi * 2 / 2;
+            break;
+          default:
+            break;
+        }
+        return Transform.rotate(angle: angle, child: child);
+      },
+    );
   }
 }
