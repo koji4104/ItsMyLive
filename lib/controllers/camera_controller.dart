@@ -18,6 +18,7 @@ class StateNotifier extends ChangeNotifier {
   Timer? _timer;
   Environment env = new Environment();
   MyLiveController _controller = MyLiveController();
+  bool _onConnected = false;
 
   String wifiIPv4 = "";
   String wifiIPv6 = "";
@@ -34,6 +35,7 @@ class StateNotifier extends ChangeNotifier {
   Future<void> initController(Environment env) async {
     if (kIsWeb) return;
     this.env = env;
+    state.state = MyState.uninitialized;
 
     try {
       wifiIPv4 = await NetworkInfo().getWifiIP() ?? "";
@@ -71,7 +73,8 @@ class StateNotifier extends ChangeNotifier {
       key: env.getKey(),
       onConnected: () {
         print('-- onConnected');
-        toStreaming();
+        //toStreaming();
+        _onConnected = true;
       },
       onDisconnected: (message) {
         print('-- onDisconnected: $message');
@@ -84,14 +87,18 @@ class StateNotifier extends ChangeNotifier {
       },
     )
         .then((_) {
+      state.state = MyState.stopped;
       this.notifyListeners();
     }).catchError((e) {
       print('---- initialize catchError ${e.toString()}');
+      state.state = MyState.uninitialized;
+      this.notifyListeners();
     });
   }
 
   void start(Environment env) {
     this.env = env;
+    _onConnected = false;
     if (kIsWeb) {
       toConnecting();
       return;
@@ -130,6 +137,7 @@ class StateNotifier extends ChangeNotifier {
   }
 
   toConnecting() {
+    _onConnected = false;
     state.state = MyState.connecting;
     state.retry = 0;
     state.streamTime = null;
@@ -138,6 +146,7 @@ class StateNotifier extends ChangeNotifier {
   }
 
   toRetrying() {
+    _onConnected = false;
     state.state = MyState.connecting;
     state.retry += 1;
     //state.publishTime = null;
@@ -156,9 +165,8 @@ class StateNotifier extends ChangeNotifier {
   }
 
   Widget getCameraWidget() {
-    if (kIsWeb || _controller == null) {
-      return Positioned(
-          left: 0, top: 0, right: 0, bottom: 0, child: Container(color: Color(0xFF444488)));
+    if (kIsWeb || _controller.isInitialized == false) {
+      return Positioned(left: 0, top: 0, right: 0, bottom: 0, child: Container(color: Color(0xFF444488)));
     } else {
       return Center(child: MyLivePreview(controller: _controller));
     }
@@ -168,32 +176,30 @@ class StateNotifier extends ChangeNotifier {
 
   /// Timer
   void onTimer(Timer timer) async {
+    if (_controller.isInitialized == false) return;
+
     // Connection timed out
-    if (state.connectTime != null &&
-        state.streamTime == null &&
-        state.state == MyState.connecting &&
-        state.retry == 0) {
-      Duration dur = DateTime.now().difference(state.connectTime!);
-      if (dur.inSeconds >= 30) {
-        MyLog.info('Connection timed out');
-        stop();
-      }
+    if (state.connectSec >= 30 && state.streamTime == null && state.state == MyState.connecting && state.retry == 0) {
+      MyLog.info('Connection timed out');
+      stop();
     }
 
     if (state.state != MyState.stopped) {
       bool isStreaming = await _controller.isStreaming();
       if (state.streamTime != null) {
-        if (isStreaming == false) {
-          // 30x 300+465 12min
+        if (state.streamSec >= 15 && isStreaming == false) {
           if (state.retry > 30) {
             toStoped();
           } else if (state.retry == 0) {
             toRetrying();
-          } else if (state.retry >= 1 && state.connectSec >= (5 + state.retry)) {
+          } else if (state.retry >= 1 && state.connectSec >= (5 + (state.retry * 2))) {
             if (state.retry == 1) MyLog.warn('Retried');
             _controller.startStream();
             toRetrying();
           }
+        } else if (state.streamSec >= 5 && state.streamSec <= 10 && isStreaming == false) {
+          //if (_controller.isSrt == false) MyLog.warn('Probably wrong RTMP KEY');
+          //toStoped();
         }
 
         // Log
@@ -201,6 +207,16 @@ class StateNotifier extends ChangeNotifier {
           print("-- State ${_oldState} -> ${state.state}");
           _oldState = state.state;
         }
+      }
+
+      // rtmp and connect=ok and wrong key
+      if (state.connectSec > 5 && _onConnected == true && _controller.isSrt == false && isStreaming == false) {
+        MyLog.warn('Probably wrong RTMP KEY');
+        toStoped();
+      }
+
+      if (state.connectTime != null && state.streamTime == null && isStreaming == true) {
+        toStreaming();
       }
 
       if (state.streamTime == null && state.state != MyState.streaming && isStreaming == true) {

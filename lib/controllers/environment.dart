@@ -211,8 +211,8 @@ class environmentNotifier extends ChangeNotifier {
 
       if (IS_TEST) {
         env.url_num.val = 1;
-        env.url1 = "rtmp://10.221.58.34/live";
-        env.key1 = "live";
+        env.url1 = "srt://10.221.58.62:5000";
+        env.key1 = "";
         print('-- load() IS_TEST');
       } else {
         print('-- load() camera_height.val=${env.camera_height.val}');

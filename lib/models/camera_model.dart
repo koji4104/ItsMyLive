@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 
 enum MyState {
+  uninitialized,
   stopped,
   connecting,
   streaming,
 }
 
 class StateData {
-  MyState state = MyState.stopped;
+  MyState state = MyState.uninitialized;
   int retry = 0;
   DateTime? connectTime;
   DateTime? streamTime;
   bool isDispInfo = false;
 
   Color get stateColor {
-    Color c = Colors.grey;
+    Color c = Colors.black;
     switch (this.state) {
       case MyState.stopped:
         c = Colors.grey;

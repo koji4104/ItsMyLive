@@ -116,6 +116,10 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
                 print('-- change env');
                 ref.read(stateProvider).initController(env);
               }
+              if (ref.read(stateProvider).state == MyState.uninitialized) {
+                print('-- initController');
+                ref.read(stateProvider).initController(env);
+              }
             },
           ),
 
@@ -137,9 +141,9 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
           // State (Info)
           if (_state.isDispInfo)
             Positioned(
-              bottom: 30,
-              left: 100.0,
-              right: 100.0,
+              bottom: 100,
+              left: 40.0,
+              width: 300.0,
               height: 90.0,
               child: Container(
                 padding: EdgeInsets.fromLTRB(4, 2, 4, 2),
@@ -152,7 +156,7 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
               ),
             ),
 
-          // Info
+          // Info button
           MyIconButton(
             bottom: 40.0,
             left: 40.0,
@@ -217,7 +221,7 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
     try {
       String s = 'Stop';
       if (_state.streamTimeString != "") s += " " + _state.streamTimeString;
-      if (_batteryLevelStart - _batteryLevel > 0) {
+      if (_batteryLevel > 0 && _batteryLevelStart - _batteryLevel > 0) {
         s += ' batt ${_batteryLevelStart}->${_batteryLevel}%';
       }
       MyLog.info(s);
@@ -255,11 +259,11 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
     String str = env.getUrl();
     if (str.length == 0) str = "URL is empty";
     str += "\r\n${env.getCameraWidth()}x${env.camera_height.val}";
-    str += " ${env.video_kbps.val}kbps";
+    str += env.video_kbps.val < 1000 ? " ${env.video_kbps.val}kbps" : " ${env.video_kbps.val / 1000}mbps";
     str += " ${env.video_fps.val}fps";
     if (ref.read(stateProvider).wifiIPv4 != "") str += "\r\nIP ${ref.read(stateProvider).wifiIPv4}";
     if (ref.read(stateProvider).wifiIPv6 != "") str += "\r\nIPv6 ${ref.read(stateProvider).wifiIPv6}";
-    return Text(str, textAlign: TextAlign.left, style: TextStyle(fontSize: 12, color: Colors.white));
+    return Text(str, textAlign: TextAlign.left, style: TextStyle(fontSize: 13, color: Colors.white));
   }
 
   void showSnackBar(String msg) {
@@ -322,6 +326,8 @@ class StateWidget extends ConsumerWidget {
         }
       } else if (_state.state == MyState.streaming) {
         str = _state.streamTimeString;
+      } else if (_state.state == MyState.uninitialized) {
+        str = "Uninitialized";
       }
       if (_oldStr != str) {
         _oldStr = str;

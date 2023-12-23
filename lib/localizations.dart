@@ -30,7 +30,7 @@ class Localized {
       'autostop_sec': 'Automatic stop',
       'autostop_sec_desc': 'It will stop automatically. It will stop even if the battery is 10% or less.',
       'camera_height': 'camera size',
-      'camera_height_desc': 'Select camera size.',
+      'camera_height_desc': 'If it is not compatible, a different size will be used.',
     },
     'ja': {
       'settings_title': '設定',
@@ -43,7 +43,7 @@ class Localized {
       'autostop_sec': '自動停止',
       'autostop_sec_desc': '自動的に停止します。バッテリー残量10%以下でも停止します。',
       'camera_height': 'カメラサイズ',
-      'camera_height_desc': 'カメラのサイズを選んでください。',
+      'camera_height_desc': '非対応の場合別のサイズになります。',
     },
   };
 

@@ -109,9 +109,11 @@ class SelectUrlScreen extends BaseSettingsScreen {
     super.build(context, ref);
     return Scaffold(
       appBar: AppBar(title: Text('URL'), backgroundColor: Color(0xFF000000)),
-      body: Container(
-        margin: edge.settingsEdge,
-        child: getList(),
+      body: SingleChildScrollView(
+        child: Container(
+          margin: edge.settingsEdge,
+          child: getList(),
+        ),
       ),
     );
   }
@@ -222,9 +224,11 @@ class EditUrlScreen extends BaseSettingsScreen {
     super.build(context, ref);
     return Scaffold(
       appBar: AppBar(title: Text('URL ${num}'), backgroundColor: Color(0xFF000000)),
-      body: Container(
-        margin: edge.settingsEdge,
-        child: getList(),
+      body: SingleChildScrollView(
+        child: Container(
+          margin: edge.settingsEdge,
+          child: getList(),
+        ),
       ),
     );
   }
