@@ -26,6 +26,7 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
   @override
   Future init() async {
     print('-- CameraScreen.init()');
+    if (IS_TEST_SS) return;
     ref.read(stateProvider).initController(env);
     WidgetsBinding.instance.addObserver(this);
     _timer = Timer.periodic(Duration(seconds: 1), onTimer);
@@ -68,7 +69,7 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
       key: _scaffoldKey,
       extendBody: true,
       body: Container(
-        margin: edge.homebarEdge,
+        margin: IS_TEST_SS ? EdgeInsets.fromLTRB(40, 20, 40, 0) : edge.homebarEdge,
         child: Stack(children: <Widget>[
           cameraWidget(context),
 
@@ -126,8 +127,8 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
           // State
           Positioned(
             top: 60,
-            left: edge.width / 2 - 95,
-            right: edge.width / 2 - 95,
+            left: IS_TEST_SS ? 320 : edge.width / 2 - 95,
+            right: IS_TEST_SS ? 320 : edge.width / 2 - 95,
             child: Container(
               padding: EdgeInsets.fromLTRB(10, 8, 10, 8),
               decoration: BoxDecoration(
@@ -143,8 +144,8 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
             Positioned(
               bottom: 100,
               left: 40.0,
-              width: 300.0,
-              height: 90.0,
+              width: 340.0,
+              height: 80.0,
               child: Container(
                 padding: EdgeInsets.fromLTRB(4, 2, 4, 2),
                 alignment: Alignment.centerLeft,
@@ -172,10 +173,10 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
 
   /// Camera Widget
   Widget cameraWidget(BuildContext context) {
-    if (kIsWeb) {
+    if (kIsWeb || IS_TEST_SS) {
       return Center(
         child: Transform.scale(
-          scale: 4.1,
+          scale: 1.4,
           child: kIsWeb
               ? Image.network('/lib/assets/sample.png', fit: BoxFit.cover)
               : Image(image: AssetImage('lib/assets/sample.png')),
@@ -259,11 +260,14 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
     String str = env.getUrl();
     if (str.length == 0) str = "URL is empty";
     str += "\r\n${env.getCameraWidth()}x${env.camera_height.val}";
-    str += env.video_kbps.val < 1000 ? " ${env.video_kbps.val}kbps" : " ${env.video_kbps.val / 1000}mbps";
+    str += env.video_kbps.val < 1000
+        ? " ${env.video_kbps.val}kbps"
+        : " ${env.video_kbps.val / 1000}mbps";
     str += " ${env.video_fps.val}fps";
     if (ref.read(stateProvider).wifiIPv4 != "") str += "\r\nIP ${ref.read(stateProvider).wifiIPv4}";
-    if (ref.read(stateProvider).wifiIPv6 != "") str += "\r\nIPv6 ${ref.read(stateProvider).wifiIPv6}";
-    return Text(str, textAlign: TextAlign.left, style: TextStyle(fontSize: 13, color: Colors.white));
+    if (ref.read(stateProvider).wifiIPv6 != "") str += "\r\nIP ${ref.read(stateProvider).wifiIPv6}";
+    return Text(str,
+        textAlign: TextAlign.left, style: TextStyle(fontSize: 13, color: Colors.white));
   }
 
   void showSnackBar(String msg) {
@@ -287,6 +291,7 @@ class StateWidget extends ConsumerWidget {
   StateWidget() {}
 
   void init(BuildContext context, WidgetRef ref) {
+    if (IS_TEST_SS) return;
     if (_timer == null) {
       Future.delayed(Duration(seconds: 1), () {
         _timer = Timer.periodic(Duration(seconds: 1), onTimer);
@@ -306,9 +311,10 @@ class StateWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     this.ref = ref;
     this._state = ref.watch(stateProvider).state;
-    String str = ref.watch(stateWidgetProvider);
+    String str = IS_TEST_SS ? "12:03" : ref.watch(stateWidgetProvider);
     Future.delayed(Duration.zero, () => init(context, ref));
-    return Text(str, textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.white));
+    return Text(str,
+        textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.white));
   }
 
   /// every second

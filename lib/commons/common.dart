@@ -78,6 +78,11 @@ class MyEdge {
     this.settingsEdge = EdgeInsets.all(margin);
     this.settingsEdge = this.settingsEdge.add(leftrightEdge);
     this.settingsEdge = this.settingsEdge.add(homebarEdge);
-    if (_provider != null && ref.read(_provider!) != null) ref.read(_provider!).notifyListeners();
+    try {
+      if (_provider != null) if (ref.read(_provider!) != null)
+        ref.read(_provider!).notifyListeners();
+    } catch (e) {
+      print('-- error getEdge e=${e.toString()}');
+    }
   }
 }

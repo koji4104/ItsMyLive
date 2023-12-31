@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 bool IS_TEST = false;
+bool IS_TEST_SS = false;
 
 // Text Style
 Color btnOn = Colors.white;

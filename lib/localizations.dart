@@ -28,22 +28,25 @@ class Localized {
       'video_fps': 'FPS',
       'video_fps_desc': 'Select FPS (frames per second)',
       'autostop_sec': 'Automatic stop',
-      'autostop_sec_desc': 'It will stop automatically. It will stop even if the battery is 10% or less.',
+      'autostop_sec_desc':
+          'It will stop automatically. It will stop even if the battery is 10% or less.',
       'camera_height': 'camera size',
       'camera_height_desc': 'If it is not compatible, a different size will be used.',
+      'key_desc': 'KEY is required by RTMP.',
     },
     'ja': {
       'settings_title': '設定',
       'url_num': 'URL',
       'url_num_desc': 'URLを選んでください。',
       'video_kbps': 'ビットレート',
-      'video_kbps_desc': '一度成功してからの切断が多いときはビットレートとカメラサイズを下げてください。',
+      'video_kbps_desc': '切断が多いときはビットレートとカメラサイズを下げてください。',
       'video_fps': 'FPS',
       'video_fps_desc': 'フレームレートを選んでください。',
       'autostop_sec': '自動停止',
       'autostop_sec_desc': '自動的に停止します。バッテリー残量10%以下でも停止します。',
       'camera_height': 'カメラサイズ',
-      'camera_height_desc': '非対応の場合別のサイズになります。',
+      'camera_height_desc': '非対応の場合は別のサイズになります。',
+      'key_desc': 'KEY は RTMP で必要です。',
     },
   };
 

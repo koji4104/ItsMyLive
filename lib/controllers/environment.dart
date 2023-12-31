@@ -34,13 +34,6 @@ class EnvData {
 
 /// Environment
 class Environment {
-  EnvData stream_mode = EnvData(
-    val: 1,
-    vals: [1, 2],
-    keys: ['rtmp', 'srt'],
-    name: 'stream_mode',
-  );
-
   EnvData autostop_sec = EnvData(
     val: 0,
     vals: IS_TEST ? [0, 120, 3600] : [0, 3600, 7200, 14400, 21600],
@@ -236,7 +229,7 @@ class environmentNotifier extends ChangeNotifier {
   }
 
   EnvData getData(String name) {
-    EnvData ret = env.stream_mode;
+    EnvData ret = env.video_fps;
     switch (name) {
       case 'video_fps':
         ret = env.video_fps;

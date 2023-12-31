@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '/constants.dart';
 
 enum MyState {
   uninitialized,
@@ -15,6 +16,7 @@ class StateData {
   bool isDispInfo = false;
 
   Color get stateColor {
+    if (IS_TEST_SS) return Colors.redAccent;
     Color c = Colors.black;
     switch (this.state) {
       case MyState.stopped:
