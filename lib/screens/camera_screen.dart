@@ -69,7 +69,7 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
       key: _scaffoldKey,
       extendBody: true,
       body: Container(
-        margin: IS_TEST_SS ? EdgeInsets.fromLTRB(40, 20, 40, 0) : edge.homebarEdge,
+        margin: IS_TEST_SS ? EdgeInsets.fromLTRB(100, 20, 100, 0) : edge.homebarEdge,
         child: Stack(children: <Widget>[
           cameraWidget(context),
 
@@ -127,8 +127,8 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
           // State
           Positioned(
             top: 60,
-            left: IS_TEST_SS ? 320 : edge.width / 2 - 95,
-            right: IS_TEST_SS ? 320 : edge.width / 2 - 95,
+            left: IS_TEST_SS ? 310 : edge.width / 2 - 95,
+            right: IS_TEST_SS ? 310 : edge.width / 2 - 95,
             child: Container(
               padding: EdgeInsets.fromLTRB(10, 8, 10, 8),
               decoration: BoxDecoration(
