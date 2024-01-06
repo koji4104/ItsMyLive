@@ -29,9 +29,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Use it&apos;s my live</string>
+	<string>This app uses the camera for screen display and video distribution</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Use it&apos;s my live</string>
+	<string>This app uses a microphone when streaming video</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
