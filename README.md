@@ -1,24 +1,27 @@
 # It's my Live
 
-<img src='img/01.png' height=100px>
-<img src='img/02.png' height=100px>
+<img src='img/01.png' height=100px>  <img src='img/02.png' height=100px>
 
 ## :blue_book: Features
 
-**It's my Live** is a live distribution application.
+**It's my Live**  is a live streaming app made with FLutter. Compatible with RTMP and SRT.
 
-## :blue_book: YouTube
-<img src='img/03.png' width=60%>
+## :blue_book: YouTube (RTMP)
+<img src='img/03.png' width=50%>
 
 Enter URL and KEY in App. Note that the KEY changes each time the button is pressed.
 
 ## :blue_book: AWS MediaLive
 
+**RTMP**
 e.g. rtmp://xxxx/test/abcd  
 URL = rtmp://xxxx/test  
 KEY = abcd
 
-## :blue_book: Nginx
+**SRT**
+URL = srt://xxxx:5000  
+
+## :blue_book: Nginx (RTMPs)
 
 URL = rtmp://(pc_ip):1935/live
 KEY = live
@@ -41,16 +44,27 @@ rtmp {
 ```
 
 ## :blue_book: PC and ffplay
-### Rtmp
-- PC (need nginx)
-  ffplay -i "rtmp://0.0.0.0:1935/live/live"
-- It's my Live
-  url rtmp://(pc_ip):1935/live
-  key live
 
-### Srt
-- PC 
-  ffplay -i "srt://0.0.0.0:5000?mode=listener"
-- It's my Live
-  url srt://(pc_ip):5000
+**RTMP**
+PC (need nginx)
+ffplay -i "rtmp://0.0.0.0:1935/live/live"
 
+It's my Live
+URL = rtmp://(pc_ip):1935/live
+KEY = live
+
+**SRT**
+PC 
+ffplay -i "srt://0.0.0.0:5000?mode=listener"
+
+It's my Live
+URL = srt://(pc_ip):5000
+
+## :blue_book: Build
+
+:file_folder: ItsMyLive
+:file_folder: mylive_libraly
+
+mylive_libraly is required to build ItsMyLive. mylive_libraly was created by me.
+
+ItsMyLiveをビルドするにはmylive_libralyが必要です。mylive_libralyは私が作りました。
