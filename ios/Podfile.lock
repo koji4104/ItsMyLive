@@ -6,8 +6,6 @@ PODS:
   - camera_avfoundation (0.0.1):
     - Flutter
   - Flutter (1.0.0)
-  - flutter_native_splash (0.0.1):
-    - Flutter
   - HaishinKit (1.6.0):
     - Logboard (~> 2.4.1)
   - integration_test (0.0.1):
@@ -25,7 +23,7 @@ PODS:
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
-  - permission_handler_apple (9.1.1):
+  - permission_handler_apple (9.3.0):
     - Flutter
   - shared_preferences_foundation (0.0.1):
     - Flutter
@@ -36,7 +34,6 @@ DEPENDENCIES:
   - battery_plus (from `.symlinks/plugins/battery_plus/ios`)
   - camera_avfoundation (from `.symlinks/plugins/camera_avfoundation/ios`)
   - Flutter (from `Flutter`)
-  - flutter_native_splash (from `.symlinks/plugins/flutter_native_splash/ios`)
   - integration_test (from `.symlinks/plugins/integration_test/ios`)
   - mylive_libraly (from `.symlinks/plugins/mylive_libraly/ios`)
   - native_device_orientation (from `.symlinks/plugins/native_device_orientation/ios`)
@@ -60,8 +57,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/camera_avfoundation/ios"
   Flutter:
     :path: Flutter
-  flutter_native_splash:
-    :path: ".symlinks/plugins/flutter_native_splash/ios"
   integration_test:
     :path: ".symlinks/plugins/integration_test/ios"
   mylive_libraly:
@@ -80,22 +75,21 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
 
 SPEC CHECKSUMS:
-  audio_session: 4f3e461722055d21515cf3261b64c973c062f345
-  battery_plus: 091633b7f01cb33dfc4aeedb450816f4d33818fa
-  camera_avfoundation: 3125e8cd1a4387f6f31c6c63abb8a55892a9eeeb
-  Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
-  flutter_native_splash: 52501b97d1c0a5f898d687f1646226c1f93c56ef
+  audio_session: 19e9480dbdd4e5f6c4543826b2e8b0e4ab6145fe
+  battery_plus: 34f72fa2afeeea83bbae306c72a25828d3ec727a
+  camera_avfoundation: dd002b0330f4981e1bbcb46ae9b62829237459a4
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   HaishinKit: 59bd6d33199df1731d1d37cebd43ae0f0f07afbf
-  integration_test: 13825b8a9334a850581300559b8839134b124670
+  integration_test: 252f60fa39af5e17c3aa9899d35d908a0721b573
   Logboard: b78984e3f9fa5075d5bfd9308d51b453992aad0e
   mylive_libraly: 686b3f268411eb2db586527b9adb7a37aa8582f9
-  native_device_orientation: 3b4cfc9565a7b879cc4fde282b3e27745e852d0d
-  network_info_plus: 6d0c3eb8367b8164fa3fb0c19875e3f59d49697f
-  package_info_plus: 6c92f08e1f853dc01228d6f553146438dafcd14e
-  path_provider_foundation: 29f094ae23ebbca9d3d0cec13889cd9060c0e943
-  permission_handler_apple: e76247795d700c14ea09e3a2d8855d41ee80a2e6
-  shared_preferences_foundation: 5b919d13b803cadd15ed2dc053125c68730e5126
+  native_device_orientation: 348b10c346a60ebbc62fb235a4fdb5d1b61a8f55
+  network_info_plus: 6613d9d7cdeb0e6f366ed4dbe4b3c51c52d567a9
+  package_info_plus: c0502532a26c7662a62a356cebe2692ec5fe4ec4
+  path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
+  permission_handler_apple: 9878588469a2b0d0fc1e048d9f43605f92e6cec2
+  shared_preferences_foundation: fcdcbc04712aee1108ac7fda236f363274528f78
 
 PODFILE CHECKSUM: 4e8f8b2be68aeea4c0d5beb6ff1e79fface1d048
 
-COCOAPODS: 1.12.1
+COCOAPODS: 1.16.2

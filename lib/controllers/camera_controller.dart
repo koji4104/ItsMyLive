@@ -4,6 +4,7 @@ import '/models/camera_model.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:developer';
 import '/constants.dart';
 import '/screens/log_screen.dart';
 import '/controllers/environment.dart';
@@ -64,36 +65,39 @@ class StateNotifier extends ChangeNotifier {
       bitrate: 128 * 1000,
       sampleRate: 44100,
     );
-    _controller
-        .initialize(
-      videoConfig: v,
-      audioConfig: a,
-      cameraPos: 0,
-      url: env.getUrl(),
-      key: env.getKey(),
-      onConnected: () {
-        print('-- onConnected');
-        //toStreaming();
-        _onConnected = true;
-      },
-      onDisconnected: (message) {
-        print('-- onDisconnected: $message');
-      },
-      onFailed: (error) {
-        print('-- onFailed: $error');
-      },
-      onError: (error) {
-        print('-- onError: code=${error.code} message=${error.message}');
-      },
-    )
-        .then((_) {
-      state.state = MyState.stopped;
-      this.notifyListeners();
-    }).catchError((e) {
-      print('---- initialize catchError ${e.toString()}');
-      state.state = MyState.uninitialized;
-      this.notifyListeners();
-    });
+    try {
+      _controller
+          .initialize(
+        videoConfig: v,
+        audioConfig: a,
+        cameraPos: 0,
+        url: env.getUrl(),
+        key: env.getKey(),
+        onConnected: () {
+          print('-- onConnected');
+          _onConnected = true;
+        },
+        onDisconnected: (message) {
+          print('-- onDisconnected: $message');
+        },
+        onFailed: (error) {
+          print('-- onFailed: $error');
+        },
+        onError: (error) {
+          print('-- onError: code=${error.code} message=${error.message}');
+        },
+      )
+          .then((_) {
+        state.state = MyState.stopped;
+        this.notifyListeners();
+      }).catchError((e) {
+        log('initialize catchError ${e.toString()}');
+        state.state = MyState.uninitialized;
+        this.notifyListeners();
+      });
+    } catch (e) {
+      log('initialize error ${e}');
+    }
   }
 
   void start(Environment env) {
@@ -166,8 +170,7 @@ class StateNotifier extends ChangeNotifier {
 
   Widget getCameraWidget() {
     if (kIsWeb || _controller.isInitialized == false) {
-      return Positioned(
-          left: 0, top: 0, right: 0, bottom: 0, child: Container(color: Color(0xFF444488)));
+      return Positioned(left: 0, top: 0, right: 0, bottom: 0, child: Container(color: Color(0xFF333333)));
     } else {
       return Center(child: MyLivePreview(controller: _controller));
     }
@@ -180,10 +183,7 @@ class StateNotifier extends ChangeNotifier {
     if (_controller.isInitialized == false) return;
 
     // Connection timed out
-    if (state.connectSec >= 30 &&
-        state.streamTime == null &&
-        state.state == MyState.connecting &&
-        state.retry == 0) {
+    if (state.connectSec >= 30 && state.streamTime == null && state.state == MyState.connecting && state.retry == 0) {
       MyLog.info('Connection timed out');
       stop();
     }
@@ -214,10 +214,7 @@ class StateNotifier extends ChangeNotifier {
       }
 
       // rtmp and connect=ok and wrong key
-      if (state.connectSec > 5 &&
-          _onConnected == true &&
-          _controller.isSrt == false &&
-          isStreaming == false) {
+      if (state.connectSec > 5 && _onConnected == true && _controller.isSrt == false && isStreaming == false) {
         MyLog.warn('Probably wrong RTMP KEY');
         toStoped();
       }

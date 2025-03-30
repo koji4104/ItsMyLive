@@ -116,7 +116,7 @@ class RadioListScreen extends BaseSettingsScreen {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n(data.name)),
-        backgroundColor: Theme.of(context).backgroundColor,
+        backgroundColor: Theme.of(context).cardColor,
       ),
       body: Container(margin: edge.settingsEdge, child: getList()),
     );
@@ -139,8 +139,7 @@ class RadioListScreen extends BaseSettingsScreen {
     return Column(children: list);
   }
 
-  Widget MyRadioListTile(
-      {required String title, required int value, required int groupValue, required void Function()? onChanged}) {
+  Widget MyRadioListTile({required String title, required int value, required int groupValue, required void Function()? onChanged}) {
     TextStyle ts = TextStyle(fontSize: 16);
     return Container(
       child: MyListTile(

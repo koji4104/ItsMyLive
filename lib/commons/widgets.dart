@@ -16,7 +16,6 @@ ThemeData myTheme = myDarkTheme;
 /// - myTheme.textTheme.titleMedium (size 16)
 ThemeData myDarkTheme = ThemeData.dark().copyWith(
   pageTransitionsTheme: MyPageTransitionsTheme(),
-  backgroundColor: Color(0xFF000000),
   scaffoldBackgroundColor: Color(0xFF000000),
   canvasColor: Color(0xFF444444),
   cardColor: Color(0xFF444444),
@@ -29,13 +28,11 @@ ThemeData myDarkTheme = ThemeData.dark().copyWith(
 );
 ThemeData myLightTheme = ThemeData.light().copyWith(
   pageTransitionsTheme: MyPageTransitionsTheme(),
-  backgroundColor: Color(0xFF444444),
   scaffoldBackgroundColor: Color(0xFF444444),
   canvasColor: Color(0xFFFFFFFF),
   cardColor: Color(0xFFffffff),
   primaryColor: Color(0xFFfffaf0),
   dividerColor: Color(0xFFaaaaaa),
-  selectedRowColor: Color(0xFFbbbbbb),
   textButtonTheme: TextButtonThemeData(
     style: ButtonStyle(foregroundColor: MaterialStateProperty.all(Color(0xFFffffff))),
   ),
@@ -79,15 +76,7 @@ Widget MyText(String text, {double? size}) {
   return Text(text, style: ts, overflow: TextOverflow.ellipsis);
 }
 
-Widget MyIconButton(
-    {required Icon icon,
-    required void Function()? onPressed,
-    double? left,
-    double? top,
-    double? right,
-    double? bottom,
-    double? iconSize,
-    Key? key}) {
+Widget MyIconButton({required Icon icon, required void Function()? onPressed, double? left, double? top, double? right, double? bottom, double? iconSize, Key? key}) {
   if (iconSize == null) iconSize = 32.0;
   return Positioned(
     left: left,
@@ -113,8 +102,7 @@ Widget MyIconButton(
 /// - title
 /// - onPressed
 /// - width: default 300
-Widget MyTextButton(
-    {required String title, required void Function()? onPressed, double? width, bool? cancelStyle, bool? deleteStyle}) {
+Widget MyTextButton({required String title, required void Function()? onPressed, double? width, bool? cancelStyle, bool? deleteStyle}) {
   Color fgcol = Color(0xFF303030);
   Color bgcol = Color(0xFFFFFFFF);
   double fsize = 14.0;
@@ -148,8 +136,7 @@ Widget MyTextButton(
 /// - multiline: null or true
 /// - radio: null or true
 /// - textonly: null or true
-Widget MyListTile(
-    {required Widget title, Widget? title2, Function()? onPressed, bool? multiline, bool? radio, bool? textonly}) {
+Widget MyListTile({required Widget title, Widget? title2, Function()? onPressed, bool? multiline, bool? radio, bool? textonly}) {
   Widget e = Expanded(child: SizedBox(width: 8));
   if (multiline != null) e = SizedBox(width: 8);
   Widget w = SizedBox(width: 8);

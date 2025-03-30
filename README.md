@@ -62,9 +62,9 @@ URL = srt://(pc_ip):5000
 
 ## :blue_book: Build
 
-:file_folder: ItsMyLive
-:file_folder: mylive_libraly
+:file_folder: ItsMyLive  
+:file_folder: mylive_libraly  
 
-mylive_libraly is required to build ItsMyLive. mylive_libraly was created by me.
+mylive_libraly is required to build ItsMyLive.  
 
-ItsMyLiveをビルドするにはmylive_libralyが必要です。mylive_libralyは私が作りました。
+

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'settings_screen.dart';
 import 'package:native_device_orientation/native_device_orientation.dart';
-import 'dart:math';
+import 'dart:developer';
+import 'dart:math' show pi; // duplicate log
 import 'dart:async';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -25,7 +26,7 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
 
   @override
   Future init() async {
-    print('-- CameraScreen.init()');
+    log('CameraScreen.init()');
     if (IS_TEST_SS) return;
     ref.read(stateProvider).initController(env);
     WidgetsBinding.instance.addObserver(this);
@@ -39,20 +40,6 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    switch (state) {
-      case AppLifecycleState.inactive:
-        print('-- inactive');
-        break;
-      case AppLifecycleState.resumed:
-        print('-- resumed');
-        break;
-      case AppLifecycleState.paused:
-        print('-- paused');
-        break;
-      case AppLifecycleState.detached:
-        print('-- detached');
-        break;
-    }
     if (state != null) {
       if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
         MyLog.warn("App stopped or background");
@@ -109,11 +96,7 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
                 builder: (context) => SettingsScreen(),
               ));
 
-              if (old_video_kbps != env.video_kbps.val ||
-                  old_camera_height != env.camera_height.val ||
-                  old_video_fps != env.video_fps.val ||
-                  old_url != env.getUrl() ||
-                  old_key != env.getKey()) {
+              if (old_video_kbps != env.video_kbps.val || old_camera_height != env.camera_height.val || old_video_fps != env.video_fps.val || old_url != env.getUrl() || old_key != env.getKey()) {
                 print('-- change env');
                 ref.read(stateProvider).initController(env);
               }
@@ -177,9 +160,7 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
       return Center(
         child: Transform.scale(
           scale: 1.4,
-          child: kIsWeb
-              ? Image.network('/lib/assets/sample.png', fit: BoxFit.cover)
-              : Image(image: AssetImage('lib/assets/sample.png')),
+          child: kIsWeb ? Image.network('/lib/assets/sample.png', fit: BoxFit.cover) : Image(image: AssetImage('lib/assets/sample.png')),
         ),
       );
     }
@@ -260,14 +241,11 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
     String str = env.getUrl();
     if (str.length == 0) str = "URL is empty";
     str += "\r\n${env.getCameraWidth()}x${env.camera_height.val}";
-    str += env.video_kbps.val < 1000
-        ? " ${env.video_kbps.val}kbps"
-        : " ${env.video_kbps.val / 1000}mbps";
+    str += env.video_kbps.val < 1000 ? " ${env.video_kbps.val}kbps" : " ${env.video_kbps.val / 1000}mbps";
     str += " ${env.video_fps.val}fps";
     if (ref.read(stateProvider).wifiIPv4 != "") str += "\r\nIP ${ref.read(stateProvider).wifiIPv4}";
     if (ref.read(stateProvider).wifiIPv6 != "") str += "\r\nIP ${ref.read(stateProvider).wifiIPv6}";
-    return Text(str,
-        textAlign: TextAlign.left, style: TextStyle(fontSize: 13, color: Colors.white));
+    return Text(str, textAlign: TextAlign.left, style: TextStyle(fontSize: 13, color: Colors.white));
   }
 
   void showSnackBar(String msg) {
@@ -313,8 +291,7 @@ class StateWidget extends ConsumerWidget {
     this._state = ref.watch(stateProvider).state;
     String str = IS_TEST_SS ? "12:03" : ref.watch(stateWidgetProvider);
     Future.delayed(Duration.zero, () => init(context, ref));
-    return Text(str,
-        textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.white));
+    return Text(str, textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.white));
   }
 
   /// every second

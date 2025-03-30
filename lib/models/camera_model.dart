@@ -18,17 +18,14 @@ class StateData {
   Color get stateColor {
     if (IS_TEST_SS) return Colors.redAccent;
     Color c = Colors.black;
-    switch (this.state) {
-      case MyState.stopped:
-        c = Colors.grey;
-        break;
-      case MyState.connecting:
-        c = Colors.blueAccent;
-        break;
-      case MyState.streaming:
-        c = Colors.redAccent;
-        break;
+    if (this.state == MyState.stopped) {
+      c = Colors.grey;
+    } else if (this.state == MyState.connecting) {
+      c = Colors.blueAccent;
+    } else if (this.state == MyState.streaming) {
+      c = Colors.redAccent;
     }
+
     return c;
   }
 

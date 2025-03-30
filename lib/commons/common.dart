@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:native_device_orientation/native_device_orientation.dart';
 import 'dart:io';
+import 'dart:developer';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
@@ -38,7 +39,7 @@ class MyEdge {
 
   static double homebarWidth = 50.0; // homebar width
   static double margin = 10.0; // basic margin
-
+  bool isinitialized = false;
   ProviderBase? _provider;
   double width = 100;
   double height = 100;
@@ -49,10 +50,10 @@ class MyEdge {
     if (this.width == MediaQuery.of(context).size.width) return;
     this.width = MediaQuery.of(context).size.width;
     this.height = MediaQuery.of(context).size.height;
-    print('-- getEdge() width=${this.width.toInt()} height=${this.height.toInt()}');
+    log('getEdge() width=${this.width.toInt()} height=${this.height.toInt()}');
 
     if (!kIsWeb && Platform.isAndroid) {
-      print('-- isAndroid');
+      log('isAndroid');
       NativeDeviceOrientation ori = await NativeDeviceOrientationCommunicator().orientation();
       switch (ori) {
         case NativeDeviceOrientation.landscapeRight:
@@ -79,10 +80,12 @@ class MyEdge {
     this.settingsEdge = this.settingsEdge.add(leftrightEdge);
     this.settingsEdge = this.settingsEdge.add(homebarEdge);
     try {
-      if (_provider != null) if (ref.read(_provider!) != null)
+      if (isinitialized == true && _provider != null) if (ref.read(_provider!) != null) {
         ref.read(_provider!).notifyListeners();
+      }
     } catch (e) {
-      print('-- error getEdge e=${e.toString()}');
+      log('error getEdge e=${e.toString()}');
     }
+    isinitialized = true;
   }
 }
