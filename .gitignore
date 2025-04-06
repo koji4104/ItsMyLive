@@ -49,6 +49,7 @@ app.*.map.json
 /web/
 /android/.gradle
 /android/.idea
+/android/app/.cxx
 /ios/Pods/
 /ios/.symlinks/
 UserInterfaceState.xcuserstate
