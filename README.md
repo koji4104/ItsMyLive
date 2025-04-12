@@ -45,20 +45,20 @@ rtmp {
 
 ## :blue_book: PC and ffplay
 
-**RTMP**
-PC (need nginx)
-ffplay -i "rtmp://0.0.0.0:1935/live/live"
+**RTMP**  
+PC (need nginx)  
+ffplay -i "rtmp://0.0.0.0:1935/live/live"  
 
-It's my Live
-URL = rtmp://(pc_ip):1935/live
-KEY = live
+It's my Live  
+URL = rtmp://(pc_ip):1935/live  
+KEY = live  
 
-**SRT**
-PC 
-ffplay -i "srt://0.0.0.0:5000?mode=listener"
+**SRT**  
+PC  
+ffplay -i "srt://0.0.0.0:5000?mode=listener"  
 
-It's my Live
-URL = srt://(pc_ip):5000
+It's my Live  
+URL = srt://(pc_ip):5000  
 
 ## :blue_book: Build
 
