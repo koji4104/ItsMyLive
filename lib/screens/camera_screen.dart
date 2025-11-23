@@ -23,6 +23,9 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
   int _batteryLevel = -1;
   int _batteryLevelStart = -1;
   StateWidget _stateWidget = StateWidget();
+  double _width = 1000.0;
+  double _height = 1000.0;
+  int _zoom = 10;
 
   @override
   Future init() async {
@@ -51,21 +54,29 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     super.build(context, ref);
+    myEnv = ref.watch(envProvider).env;
     this._state = ref.watch(stateProvider).state;
+    _width = MediaQuery.of(context).size.width;
+    _height = MediaQuery.of(context).size.height;
+
+    double padtop = 50.0;
+    double pad = 40.0;
+    double padbottom = 40.0;
+
     return Scaffold(
       key: _scaffoldKey,
       extendBody: true,
       body: Container(
-        margin: IS_TEST_SS ? EdgeInsets.fromLTRB(100, 20, 100, 0) : edge.homebarEdge,
+        margin:
+            IS_TEST_SS ? EdgeInsets.fromLTRB(100, 20, 100, 0) : EdgeInsets.fromLTRB(8, 16, 8, 0),
         child: Stack(children: <Widget>[
           cameraWidget(context),
 
           // Start
           MyIconButton(
-            key: Key('start'),
             top: 0.0,
             bottom: 0.0,
-            right: 40,
+            right: pad,
             icon: Icon(Icons.lens_rounded, color: _state.stateColor),
             onPressed: () {
               _state.state == MyState.stopped ? onStart() : onStop();
@@ -74,16 +85,16 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
 
           // Camera Switch
           MyIconButton(
-            bottom: 40.0,
-            right: 40.0,
+            bottom: padbottom,
+            right: pad,
             icon: Icon(Icons.autorenew, color: Colors.white),
             onPressed: () => onSwitchCamera(),
           ),
 
           // Settings
           MyIconButton(
-            top: 50.0,
-            left: 40.0,
+            top: padtop,
+            left: pad,
             icon: Icon(Icons.settings, color: Colors.white),
             onPressed: () async {
               int old_video_kbps = env.video_kbps.val;
@@ -96,12 +107,15 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
                 builder: (context) => SettingsScreen(),
               ));
 
-              if (old_video_kbps != env.video_kbps.val || old_camera_height != env.camera_height.val || old_video_fps != env.video_fps.val || old_url != env.getUrl() || old_key != env.getKey()) {
-                print('-- change env');
+              if (old_video_kbps != env.video_kbps.val ||
+                  old_camera_height != env.camera_height.val ||
+                  old_video_fps != env.video_fps.val ||
+                  old_url != env.getUrl() ||
+                  old_key != env.getKey()) {
+                log('change env');
                 ref.read(stateProvider).initController(env);
-              }
-              if (ref.read(stateProvider).state == MyState.uninitialized) {
-                print('-- initController');
+              } else if (ref.read(stateProvider).state == MyState.uninitialized) {
+                log('initController');
                 ref.read(stateProvider).initController(env);
               }
             },
@@ -109,9 +123,9 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
 
           // State
           Positioned(
-            top: 60,
-            left: IS_TEST_SS ? 310 : edge.width / 2 - 95,
-            right: IS_TEST_SS ? 310 : edge.width / 2 - 95,
+            top: padtop + 6.0,
+            left: IS_TEST_SS ? 310 : _width / 2 - 95,
+            right: IS_TEST_SS ? 310 : _width / 2 - 95,
             child: Container(
               padding: EdgeInsets.fromLTRB(10, 8, 10, 8),
               decoration: BoxDecoration(
@@ -125,12 +139,12 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
           // State (Info)
           if (_state.isDispInfo)
             Positioned(
-              bottom: 100,
-              left: 40.0,
+              bottom: pad + 70.0,
+              left: pad + 2,
               width: 340.0,
-              height: 80.0,
+              height: 84.0,
               child: Container(
-                padding: EdgeInsets.fromLTRB(4, 2, 4, 2),
+                padding: EdgeInsets.fromLTRB(8, 2, 8, 2),
                 alignment: Alignment.centerLeft,
                 decoration: BoxDecoration(
                   color: Colors.black54,
@@ -142,11 +156,53 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
 
           // Info button
           MyIconButton(
-            bottom: 40.0,
-            left: 40.0,
+            bottom: padbottom,
+            left: pad,
             icon: Icon(Icons.info_outline, color: Colors.white),
             onPressed: () {
               ref.read(stateProvider).switchDispInfo();
+            },
+          ),
+
+          MyIconButton(
+            bottom: padbottom,
+            left: pad + 70,
+            icon: Icon(Icons.remove, color: Colors.white),
+            onPressed: () {
+              _zoom -= 5;
+              if (_zoom < 10) _zoom = 10;
+              ref.read(stateProvider).setCameraZoom(_zoom);
+              redraw();
+            },
+          ),
+          Positioned(
+            bottom: padbottom + 12,
+            left: pad + 140,
+            width: 40.0,
+            height: 40.0,
+            child: Container(
+              padding: EdgeInsets.fromLTRB(1, 1, 1, 1),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                _zoom.toString(),
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, color: Colors.white),
+              ),
+            ),
+          ),
+          MyIconButton(
+            bottom: padbottom,
+            left: pad + 186,
+            icon: Icon(Icons.add, color: Colors.white),
+            onPressed: () {
+              _zoom += 5;
+              if (_zoom > 40) _zoom = 40;
+              ref.read(stateProvider).setCameraZoom(_zoom);
+              redraw();
             },
           ),
         ]),
@@ -160,7 +216,9 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
       return Center(
         child: Transform.scale(
           scale: 1.4,
-          child: kIsWeb ? Image.network('/lib/assets/sample.png', fit: BoxFit.cover) : Image(image: AssetImage('lib/assets/sample.png')),
+          child: kIsWeb
+              ? Image.network('/lib/assets/sample.png', fit: BoxFit.cover)
+              : Image(image: AssetImage('lib/assets/sample.png')),
         ),
       );
     }
@@ -170,7 +228,7 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
   /// Switch
   void onSwitchCamera() {
     int pos = env.camera_pos.val == 0 ? 1 : 0;
-    ref.read(environmentProvider).saveData(env.camera_pos.name, pos);
+    ref.read(envProvider).saveData(env.camera_pos.name, pos);
     ref.read(stateProvider).switchCamera(pos);
   }
 
@@ -199,10 +257,10 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
 
   /// onStop
   Future<void> onStop() async {
-    print('-- onStop');
+    log('onStop');
     try {
       String s = 'Stop';
-      if (_state.streamTimeString != "") s += " " + _state.streamTimeString;
+      if (_state.streamingTimeString != "") s += " " + _state.streamingTimeString;
       if (_batteryLevel > 0 && _batteryLevelStart - _batteryLevel > 0) {
         s += ' batt ${_batteryLevelStart}->${_batteryLevel}%';
       }
@@ -241,11 +299,14 @@ class CameraScreen extends BaseScreen with WidgetsBindingObserver {
     String str = env.getUrl();
     if (str.length == 0) str = "URL is empty";
     str += "\r\n${env.getCameraWidth()}x${env.camera_height.val}";
-    str += env.video_kbps.val < 1000 ? " ${env.video_kbps.val}kbps" : " ${env.video_kbps.val / 1000}mbps";
+    str += env.video_kbps.val < 1000
+        ? " ${env.video_kbps.val}kbps"
+        : " ${env.video_kbps.val / 1000}mbps";
     str += " ${env.video_fps.val}fps";
     if (ref.read(stateProvider).wifiIPv4 != "") str += "\r\nIP ${ref.read(stateProvider).wifiIPv4}";
     if (ref.read(stateProvider).wifiIPv6 != "") str += "\r\nIP ${ref.read(stateProvider).wifiIPv6}";
-    return Text(str, textAlign: TextAlign.left, style: TextStyle(fontSize: 13, color: Colors.white));
+    return Text(str,
+        textAlign: TextAlign.left, style: TextStyle(fontSize: 13, color: Colors.white));
   }
 
   void showSnackBar(String msg) {
@@ -291,7 +352,8 @@ class StateWidget extends ConsumerWidget {
     this._state = ref.watch(stateProvider).state;
     String str = IS_TEST_SS ? "12:03" : ref.watch(stateWidgetProvider);
     Future.delayed(Duration.zero, () => init(context, ref));
-    return Text(str, textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.white));
+    return Text(str,
+        textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.white));
   }
 
   /// every second
@@ -308,7 +370,7 @@ class StateWidget extends ConsumerWidget {
           if (dur.inSeconds >= 0) str += ' ${dur.inSeconds}s';
         }
       } else if (_state.state == MyState.streaming) {
-        str = _state.streamTimeString;
+        str = _state.streamingTimeString;
       } else if (_state.state == MyState.uninitialized) {
         str = "Uninitialized";
       }
@@ -317,36 +379,7 @@ class StateWidget extends ConsumerWidget {
         ref.read(stateWidgetProvider.state).state = str;
       }
     } catch (e) {
-      print('-- onTimer err=${e.toString()}');
+      log('onTimer err=${e.toString()}');
     }
-  }
-}
-
-/// OrientationCamera
-class OrientationCamera extends StatelessWidget {
-  Widget child;
-  OrientationCamera({required this.child});
-  @override
-  Widget build(BuildContext context) {
-    return NativeDeviceOrientationReader(
-      useSensor: true,
-      builder: (context) {
-        double angle = 0.0;
-        switch (NativeDeviceOrientationReader.orientation(context)) {
-          case NativeDeviceOrientation.landscapeRight:
-            angle = pi * 1 / 2;
-            break;
-          case NativeDeviceOrientation.landscapeLeft:
-            angle = pi * 3 / 2;
-            break;
-          case NativeDeviceOrientation.portraitDown:
-            angle = pi * 2 / 2;
-            break;
-          default:
-            break;
-        }
-        return Transform.rotate(angle: angle, child: child);
-      },
-    );
   }
 }

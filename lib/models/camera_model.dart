@@ -25,20 +25,19 @@ class StateData {
     } else if (this.state == MyState.streaming) {
       c = Colors.redAccent;
     }
-
     return c;
   }
 
-  int get connectSec {
+  int get connectingSec {
     return connectTime != null ? DateTime.now().difference(connectTime!).inSeconds : -1;
   }
 
-  int get streamSec {
+  int get streamingSec {
     return streamTime != null ? DateTime.now().difference(streamTime!).inSeconds : -1;
   }
 
   /// 01:10
-  String get streamTimeString {
+  String get streamingTimeString {
     String str = "";
     if (streamTime != null) {
       Duration dur = DateTime.now().difference(streamTime!);

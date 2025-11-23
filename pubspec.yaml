@@ -1,6 +1,6 @@
 name: itsmylive
 description: Flutter Live Rtmp and Srt.
-version: 2.1.0+1
+version: 2.2.0+1
 
 environment:
   sdk: ">=3.5.0 <4.0.0"
@@ -24,6 +24,7 @@ dependencies:
   permission_handler: ^11.3.1
   network_info_plus: ^6.1.3
   package_info_plus: ^8.2.0 # License
+  flutter_slidable: ^4.0.3
   mylive_libraly:
     path: ../mylive_libraly
 

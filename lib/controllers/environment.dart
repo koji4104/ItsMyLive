@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/constants.dart';
+import 'dart:developer';
 
 class EnvData {
   int val;
@@ -15,10 +16,10 @@ class EnvData {
       required List<int> this.vals,
       required List<String> this.keys,
       required String this.name}) {
-    set(val);
+    round(val);
   }
 
-  void set(int? v) {
+  void round(int? v) {
     if (v == null || vals.length == 0 || keys.length == 0) return;
     val = vals[vals.length - 1];
     key = keys[keys.length - 1];
@@ -171,7 +172,7 @@ class Environment {
   }
 }
 
-final environmentProvider = ChangeNotifierProvider((ref) => environmentNotifier(ref));
+final envProvider = ChangeNotifierProvider((ref) => environmentNotifier(ref));
 
 class environmentNotifier extends ChangeNotifier {
   Environment env = Environment();
@@ -202,13 +203,13 @@ class environmentNotifier extends ChangeNotifier {
       env.url4 = prefs.getString('url4') ?? '';
       env.key4 = prefs.getString('key4') ?? '';
 
-      if (IS_TEST) {
+      if (IS_TEST_URL) {
         env.url_num.val = 1;
-        env.url1 = "srt://10.221.58.62:5000";
-        env.key1 = "";
-        print('-- load() IS_TEST');
+        env.url1 = "rtmp://10.221.58.68:1935/live";
+        env.key1 = "live";
+        log('env.load() IS_TEST_URL');
       } else {
-        print('-- load() camera_height.val=${env.camera_height.val}');
+        log('load() camera_height.val=${env.camera_height.val}');
       }
     } on Exception catch (e) {
       print('-- load() err=' + e.toString());
@@ -216,16 +217,25 @@ class environmentNotifier extends ChangeNotifier {
   }
 
   _loadSub(SharedPreferences prefs, EnvData data) {
-    data.set(prefs.getInt(data.name) ?? data.val);
+    data.round(prefs.getInt(data.name) ?? data.val);
   }
 
   Future saveData(String name, int newVal) async {
     EnvData data = getData(name);
     if (data.val == newVal) return;
-    data.set(newVal);
+    data.round(newVal);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(data.name, data.val);
     this.notifyListeners();
+  }
+
+  Future<bool> saveVal(EnvData data, int newVal) async {
+    if (data.val == newVal) return false;
+    data.round(newVal);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(data.name, data.val);
+    this.notifyListeners();
+    return true;
   }
 
   EnvData getData(String name) {

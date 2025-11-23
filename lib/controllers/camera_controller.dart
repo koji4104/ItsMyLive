@@ -11,6 +11,7 @@ import '/controllers/environment.dart';
 import 'dart:async';
 import 'package:mylive_libraly/mylive_libraly.dart';
 import 'package:network_info_plus/network_info_plus.dart';
+import 'dart:developer';
 
 final stateProvider = ChangeNotifierProvider((ref) => StateNotifier(ref));
 
@@ -34,17 +35,17 @@ class StateNotifier extends ChangeNotifier {
   }
 
   Future<void> initController(Environment env) async {
-    if (kIsWeb) return;
+    if (IS_TEST_NO_CAMERA) return;
     this.env = env;
     state.state = MyState.uninitialized;
 
     try {
       wifiIPv4 = await NetworkInfo().getWifiIP() ?? "";
-      print("-- IPv4=${wifiIPv4}");
+      log("IPv4=${wifiIPv4}");
     } catch (e) {}
     try {
       wifiIPv6 = await NetworkInfo().getWifiIPv6() ?? "";
-      print("-- IPv6=${wifiIPv6}");
+      log("IPv6=${wifiIPv6}");
       if (wifiIPv6.contains("fe80:")) wifiIPv6 = "";
     } catch (e) {}
 
@@ -52,7 +53,7 @@ class StateNotifier extends ChangeNotifier {
       await Permission.camera.request();
       await Permission.microphone.request();
     } catch (e) {
-      print('-- initialize.Permission error');
+      log('initialize.Permission error');
     }
 
     var v = MyLiveVideoConfig(
@@ -74,20 +75,21 @@ class StateNotifier extends ChangeNotifier {
         url: env.getUrl(),
         key: env.getKey(),
         onConnected: () {
-          print('-- onConnected');
+          log('onConnected');
           _onConnected = true;
         },
         onDisconnected: (message) {
-          print('-- onDisconnected: $message');
+          log('onDisconnected: $message');
         },
         onFailed: (error) {
-          print('-- onFailed: $error');
+          log('onFailed: $error');
         },
         onError: (error) {
-          print('-- onError: code=${error.code} message=${error.message}');
+          log('onError: code=${error.code} message=${error.message}');
         },
       )
           .then((_) {
+        log('initialize.then()');
         state.state = MyState.stopped;
         this.notifyListeners();
       }).catchError((e) {
@@ -103,7 +105,7 @@ class StateNotifier extends ChangeNotifier {
   void start(Environment env) {
     this.env = env;
     _onConnected = false;
-    if (kIsWeb) {
+    if (IS_TEST_NO_CAMERA) {
       toConnecting();
       return;
     }
@@ -163,6 +165,10 @@ class StateNotifier extends ChangeNotifier {
     this.notifyListeners();
   }
 
+  void setCameraZoom(int zoom) {
+    _controller.setCameraZoom(zoom);
+  }
+
   /// pos 0=back 1=front
   void switchCamera(int pos) {
     _controller.setCameraPos(pos);
@@ -181,56 +187,38 @@ class StateNotifier extends ChangeNotifier {
   /// Timer
   void onTimer(Timer timer) async {
     if (_controller.isInitialized == false) return;
+    if (state.state == MyState.stopped) return;
+
+    bool isStreaming = await _controller.isStreaming();
 
     // Connection timed out
-    if (state.connectSec >= 30 && state.streamTime == null && state.state == MyState.connecting && state.retry == 0) {
+    if (isStreaming == false && state.connectingSec >= 30 && state.retry == 0) {
       MyLog.info('Connection timed out');
       stop();
     }
 
-    if (state.state != MyState.stopped) {
-      bool isStreaming = await _controller.isStreaming();
-      if (state.streamTime != null) {
-        if (state.streamSec >= 15 && isStreaming == false) {
-          if (state.retry > 20) {
-            toStoped();
-          } else if (state.retry == 0) {
-            toRetrying();
-          } else if (state.retry >= 1 && state.connectSec >= (5 + (state.retry * 2))) {
-            if (state.retry == 1) MyLog.warn('Retried');
-            _controller.startStream();
-            toRetrying();
-          }
-        } else if (state.streamSec >= 5 && state.streamSec <= 10 && isStreaming == false) {
-          //if (_controller.isSrt == false) MyLog.warn('Probably wrong RTMP KEY');
-          //toStoped();
-        }
-
-        // Log
-        if (_oldState != state.state) {
-          print("-- State ${_oldState} -> ${state.state}");
-          _oldState = state.state;
-        }
+    // streaming -> Retrying
+    if (isStreaming == false && state.streamingSec >= 10) {
+      if (state.retry > 20) {
+        stop();
+      } else if (state.retry == 0) {
+        toRetrying();
+      } else if (state.retry >= 1 && state.connectingSec >= (5 + (state.retry * 2))) {
+        if (state.retry == 1) MyLog.warn('Retried');
+        _controller.startStream();
+        toRetrying();
       }
+    }
 
-      // rtmp and connect=ok and wrong key
-      if (state.connectSec > 5 && _onConnected == true && _controller.isSrt == false && isStreaming == false) {
-        MyLog.warn('Probably wrong RTMP KEY');
-        toStoped();
-      }
+    // connecting -> streaming
+    if (isStreaming == true && state.state != MyState.streaming) {
+      toStreaming();
+    }
 
-      // リトライから復帰
-      if (state.retry > 0 && isStreaming == true) {
-        toStreaming();
-      }
-
-      if (state.connectTime != null && state.streamTime == null && isStreaming == true) {
-        toStreaming();
-      }
-
-      if (state.streamTime == null && state.state != MyState.streaming && isStreaming == true) {
-        toStreaming();
-      }
+    // debug log
+    if (_oldState != state.state) {
+      log("State ${_oldState} -> ${state.state}");
+      _oldState = state.state;
     }
   }
 }
