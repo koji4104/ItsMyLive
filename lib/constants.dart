@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 bool IS_TEST = false;
-bool IS_TEST_URL = true;
+bool IS_TEST_URL = false;
 bool IS_TEST_SS = false;
 bool IS_TEST_NO_CAMERA = false;
 
